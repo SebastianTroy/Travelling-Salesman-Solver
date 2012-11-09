@@ -1,6 +1,5 @@
 package ShortestPath;
 
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 
@@ -10,7 +9,7 @@ import TroysCode.hub;
 public class Solution
 	{
 		Node[] solution;
-		double fitness;
+		double tourLength;
 
 		// create new random solution
 		public Solution()
@@ -21,91 +20,126 @@ public class Solution
 		// Create a mutated solution from a parent
 		public Solution(Solution parent)
 			{
-				solution = parent.solution.clone();
-
-				mutate();
-
-				reCalculate();
-			}
-
-		// Create a mutated solution from two parents
-		public Solution(Solution par1, Solution par2)
-			{
-				solution = new Node[par1.solution.length];
-
-				int crossA = Tools.randInt(0, par1.solution.length);
-				int crossB = Tools.randInt(0, par1.solution.length);
-
-				boolean isPar1 = true;
-
-				for (int i = 0; i < par1.solution.length; i++)
+				solution = new Node[parent.solution.length];
+				int i = 0;
+				for (Node n : parent.solution)
 					{
-						if (i == crossA || i == crossB)
-							isPar1 = !isPar1;
+						solution[i] = n;
+						i++;
+					}
+					
 
-						if (isPar1)
-							solution[i] = par1.solution[i];
-						else
-							solution[i] = par2.solution[i];
+				switch (Tools.randInt(0, 3))
+					{
+					case (0):
+						twoOpt();
+						break;
+					case (1):
+						threeOpt();
+						break;
+					case (2):
+						swapNeighbors();
+						break;
+					case (3):
+						fourOpt();
+						break;
 					}
 
-				//fix();
-				reCalculate();
+				calculateTourLength();
 			}
 
-		public final void fix()
-			{
-				ArrayList<Node> unUsedNodes = new ArrayList<Node>();
-				ArrayList<Node> reUsedNodes = new ArrayList<Node>();
-				for (Node n : hub.simulation.getNodes())
-					unUsedNodes.add(n);
-
-				for (Node n : solution)
-					{
-						if (!unUsedNodes.remove(n))
-							reUsedNodes.add(n);
-					}
-
-				for (Node n : solution)
-					{
-						if (reUsedNodes.contains(n))
-							{
-								reUsedNodes.remove(n);
-								n = unUsedNodes.get(0);
-								unUsedNodes.remove(0);
-							}
-					}
-			}
-
-		public final void mutate()
+		private final void swapNeighbors()
 			{
 				Node[] oldSol = solution.clone();
-				
+
+				// Choose two nodes to swap
+				int swap = Tools.randInt(0, oldSol.length - 1);
+
+				if (swap == oldSol.length - 1)
+					// swap first and last nodes around
+					{
+						solution[swap] = oldSol[0];
+						solution[0] = oldSol[swap];
+					}
+				else
+					{
+						// Swap two nodes around
+						solution[swap] = oldSol[swap + 1];
+						solution[swap + 1] = oldSol[swap];
+					}
+			}
+
+		private final void twoOpt()
+			{
+				Node[] oldSol = solution.clone();
+
 				// Choose two nodes to swap
 				int swapOne = Tools.randInt(0, oldSol.length - 1);
 				int swapTwo = Tools.randInt(0, oldSol.length - 1);
 
-				for (int i = 0; i < Tools.randInt(1, solution.length / 2); i++)
-					{
-						// Swap two nodes around
-						solution[swapOne] = oldSol[swapTwo];
-						solution[swapTwo] = oldSol[swapOne];
-					}
+				// Swap two nodes around
+				solution[swapOne] = oldSol[swapTwo];
+				solution[swapTwo] = oldSol[swapOne];
+			}
+
+		private final void threeOpt()
+			{
+				Node[] oldSol = solution.clone();
+
+				int swapOne = 0;
+				int swapTwo = 0;
+				int swapThree = 0;
+
+				// Choose two nodes to swap
+				swapOne = Tools.randInt(0, oldSol.length - 1);
+				while (swapTwo != swapOne)
+					swapTwo = Tools.randInt(0, oldSol.length - 1);
+				while (swapThree != swapOne && swapThree != swapTwo)
+					swapThree = Tools.randInt(0, oldSol.length - 1);
+
+				// Swap two nodes around
+				solution[swapOne] = oldSol[swapThree];
+				solution[swapTwo] = oldSol[swapTwo];
+				solution[swapThree] = oldSol[swapOne];
+			}
+
+		private final void fourOpt()
+			{
+				Node[] oldSol = solution.clone();
+
+				int swapOne = 0;
+				int swapTwo = 0;
+				int swapThree = 0;
+				int swapFour = 0;
+
+				// Choose two nodes to swap
+				swapOne = Tools.randInt(0, oldSol.length - 1);
+				while (swapTwo != swapOne)
+					swapTwo = Tools.randInt(0, oldSol.length - 1);
+				while (swapThree != swapOne && swapThree != swapTwo)
+					swapThree = Tools.randInt(0, oldSol.length - 1);
+				while (swapFour != swapOne && swapFour != swapTwo && swapFour != swapThree)
+					swapFour = Tools.randInt(0, oldSol.length - 1);
+
+				// Swap two nodes around
+				solution[swapOne] = oldSol[swapThree];
+				solution[swapTwo] = oldSol[swapTwo];
+				solution[swapThree] = oldSol[swapOne];
 			}
 
 		public final void reset()
 			{
-				solution = hub.simulation.getNodes();
+				solution = hub.tsp.getNodes();
 				Collections.shuffle(Arrays.asList(solution));
 
-				reCalculate();
+				calculateTourLength();
 			}
 
 		// calculate fitness
-		public final void reCalculate()
+		public final void calculateTourLength()
 			{
-				fitness = 0;
+				tourLength = 0;
 				for (int i = 0; i < solution.length - 1; i++)
-					fitness += Tools.getVectorLength(solution[i].x, solution[i].y, solution[i + 1].x, solution[i + 1].y);
+					tourLength += Tools.getVectorLength(solution[i].x, solution[i].y, solution[i + 1].x, solution[i + 1].y);
 			}
 	}

@@ -20,7 +20,7 @@ public class Node
 
 		public final void mousePressed(MouseEvent e)
 			{
-				if (Tools.getVectorLength(e.getX(), e.getY(), x, y) < hub.simulation.nodeSize / 2)
+				if (Tools.getVectorLength(e.getX(), e.getY(), x, y) < hub.tsp.nodeSize / 2)
 					{
 						selected = true;
 					}

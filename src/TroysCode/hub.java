@@ -1,7 +1,7 @@
 package TroysCode;
 
 import ShortestPath.Info;
-import ShortestPath.SimWindow;
+import ShortestPath.TSP;
 
 /**
  * The {@link hub} Class Contains the main method.
@@ -77,7 +77,7 @@ public class hub
 		 * between, e.g. to go to the instance of the Example.java class:
 		 * ""hub.renderer.changeRenderableObject(hub.mainMenu)""
 		 */
-		public static final SimWindow simulation = new SimWindow();
+		public static final TSP tsp = new TSP();
 		public static final Info info = new Info();
 
 		/**
@@ -87,7 +87,7 @@ public class hub
 		public static void main(String[] args)
 			{
 				frame.startFrame();
-				hub.renderer.setStartRenderableObject(simulation);
+				hub.renderer.setStartRenderableObject(tsp);
 				hub.renderer.begin();
 			}
 	}

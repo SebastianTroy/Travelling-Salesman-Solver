@@ -16,29 +16,26 @@ import TroysCode.T.TScrollEvent;
 
 public class Info extends RenderableObject
 	{
-		private boolean continue_ = false;
+		private static final long serialVersionUID = 1L;
+		private boolean backToTSP = false;
 
 		@Override
 		protected void initiate()
 			{
-				// TODO Auto-generated method stub
-
 			}
 
 		@Override
 		protected void refresh()
 			{
-				// TODO Auto-generated method stub
-
 			}
 
 		@Override
 		protected void tick(double secondsPassed)
 			{
-				if (continue_)
+				if (backToTSP)
 					{
-						continue_ = false;
-						changeRenderableObject(hub.simulation);
+						backToTSP = false;
+						changeRenderableObject(hub.tsp);
 					}
 			}
 
@@ -62,112 +59,81 @@ public class Info extends RenderableObject
 		@Override
 		protected void mousePressed(MouseEvent event)
 			{
-				continue_ = true;
+				backToTSP = true;
 			}
 
 		@Override
 		protected void mouseReleased(MouseEvent event)
 			{
-				// TODO Auto-generated method stub
-
 			}
 
 		@Override
 		protected void mouseDragged(MouseEvent event)
 			{
-				// TODO Auto-generated method stub
-
 			}
 
 		@Override
 		protected void mouseMoved(MouseEvent event)
 			{
-				// TODO Auto-generated method stub
-
 			}
 
 		@Override
 		protected void mouseWheelScrolled(MouseWheelEvent event)
 			{
-				// TODO Auto-generated method stub
-
 			}
 
 		@Override
 		protected void actionPerformed(ActionEvent event)
 			{
-				// TODO Auto-generated method stub
-
 			}
 
 		@Override
 		protected void keyPressed(KeyEvent event)
 			{
-				// TODO Auto-generated method stub
-
 			}
 
 		@Override
 		protected void keyReleased(KeyEvent event)
 			{
-				// TODO Auto-generated method stub
-
 			}
 
 		@Override
 		protected void keyTyped(KeyEvent event)
 			{
-				// TODO Auto-generated method stub
-
 			}
 
 		@Override
 		protected void mouseClicked(MouseEvent event)
 			{
-				// TODO Auto-generated method stub
-
 			}
 
 		@Override
 		protected void mouseEntered(MouseEvent event)
 			{
-				// TODO Auto-generated method stub
-
 			}
 
 		@Override
 		protected void mouseExited(MouseEvent event)
 			{
-				// TODO Auto-generated method stub
-
 			}
 
 		@Override
 		protected void programGainedFocus(WindowEvent event)
 			{
-				// TODO Auto-generated method stub
-
 			}
 
 		@Override
 		protected void programLostFocus(WindowEvent event)
 			{
-				// TODO Auto-generated method stub
-
 			}
 
 		@Override
 		protected void frameResized(ComponentEvent event)
 			{
-				// TODO Auto-generated method stub
-
 			}
 
 		@Override
 		public void tScrollBarScrolled(TScrollEvent event)
 			{
-				// TODO Auto-generated method stub
-
 			}
-
 	}
