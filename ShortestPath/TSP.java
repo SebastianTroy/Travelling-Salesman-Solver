@@ -132,7 +132,7 @@ public class TSP extends RenderableObject
 				g.fillRect(0, 0, 800, 600);
 
 				g.setColor(Color.RED);
-				int barLength = (int) (Math.log10(averageImprovement + 1) * 300);
+				int barLength = (int) (Math.log10((averageImprovement * 2) + 1) * 300);
 				g.fillRect(0, 0, 10, (int) barLength);
 
 				g.setColor(Color.WHITE);
@@ -229,6 +229,8 @@ public class TSP extends RenderableObject
 					{
 						for (Node n : nodes)
 							n.exists = false;
+						
+						averageImprovement = 0;
 					}
 				else if (event.getKeyChar() == 'r')// random node
 					{

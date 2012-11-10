@@ -1,5 +1,6 @@
 package ShortestPath;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 
@@ -27,24 +28,13 @@ public class Solution
 						solution[i] = n;
 						i++;
 					}
-				
+
 				calculateTourLength();
 
-				switch (Tools.randInt(0, 3))
-					{
-					case (0):
-						twoOpt();
-						break;
-					case (1):
-						threeOpt();
-						break;
-					case (2):
-						swapNeighbors();
-						break;
-					case (3):
-						fourOpt();
-						break;
-					}
+				if (Tools.randBool())
+					swapNeighbors();
+				else
+					nOpt(Tools.randInt(2, solution.length / 2));
 
 				calculateTourLength();
 			}
@@ -57,7 +47,7 @@ public class Solution
 				int swap = Tools.randInt(0, oldSol.length - 1);
 
 				if (swap == oldSol.length - 1)
-					// swap first and last nodes around
+				// swap first and last nodes around
 					{
 						solution[swap] = oldSol[0];
 						solution[0] = oldSol[swap];
@@ -70,62 +60,39 @@ public class Solution
 					}
 			}
 
-		private final void twoOpt()
+		private final void nOpt(int numSwaps)
 			{
+				if (numSwaps >= solution.length)
+					{
+						reset();
+						return;
+					}
+
 				Node[] oldSol = solution.clone();
 
-				// Choose two nodes to swap
-				int swapOne = Tools.randInt(0, oldSol.length - 1);
-				int swapTwo = Tools.randInt(0, oldSol.length - 1);
+				ArrayList<Integer> swapPoints = new ArrayList<Integer>();
+				while (swapPoints.size() < numSwaps)
+					{
+						int newSwap = Tools.randInt(0, solution.length - 1);
+						boolean unique = true;
+						for (Integer swapPoint : swapPoints)
+							if (swapPoint == newSwap)
+								{
+									unique = false;
+									break;
+								}
+						if (unique)
+							swapPoints.add(newSwap);
+					}
 
-				// Swap two nodes around
-				solution[swapOne] = oldSol[swapTwo];
-				solution[swapTwo] = oldSol[swapOne];
-			}
+				Integer[] swapPointsCopy = new Integer[swapPoints.size()];
+				swapPoints.toArray(swapPointsCopy);
+				Collections.shuffle(Arrays.asList(swapPointsCopy));
 
-		private final void threeOpt()
-			{
-				Node[] oldSol = solution.clone();
-
-				int swapOne = 0;
-				int swapTwo = 0;
-				int swapThree = 0;
-
-				// Choose two nodes to swap
-				swapOne = Tools.randInt(0, oldSol.length - 1);
-				while (swapTwo != swapOne)
-					swapTwo = Tools.randInt(0, oldSol.length - 1);
-				while (swapThree != swapOne && swapThree != swapTwo)
-					swapThree = Tools.randInt(0, oldSol.length - 1);
-
-				// Swap two nodes around
-				solution[swapOne] = oldSol[swapThree];
-				solution[swapTwo] = oldSol[swapTwo];
-				solution[swapThree] = oldSol[swapOne];
-			}
-
-		private final void fourOpt()
-			{
-				Node[] oldSol = solution.clone();
-
-				int swapOne = 0;
-				int swapTwo = 0;
-				int swapThree = 0;
-				int swapFour = 0;
-
-				// Choose two nodes to swap
-				swapOne = Tools.randInt(0, oldSol.length - 1);
-				while (swapTwo != swapOne)
-					swapTwo = Tools.randInt(0, oldSol.length - 1);
-				while (swapThree != swapOne && swapThree != swapTwo)
-					swapThree = Tools.randInt(0, oldSol.length - 1);
-				while (swapFour != swapOne && swapFour != swapTwo && swapFour != swapThree)
-					swapFour = Tools.randInt(0, oldSol.length - 1);
-
-				// Swap two nodes around
-				solution[swapOne] = oldSol[swapThree];
-				solution[swapTwo] = oldSol[swapTwo];
-				solution[swapThree] = oldSol[swapOne];
+				for (int i = 0; i < swapPoints.size(); i++)
+					{
+						solution[swapPoints.get(i)] = oldSol[swapPointsCopy[i]];
+					}
 			}
 
 		public final void reset()
