@@ -604,6 +604,7 @@ public class TButton extends TComponent implements Serializable
 			{
 				if (fitToLabel == true)
 					{
+						setLabelBounds();
 						this.width = labelBounds.getWidth() + 6;
 						this.height = labelBounds.getHeight() + 6;
 					}

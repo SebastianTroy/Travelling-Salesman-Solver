@@ -46,14 +46,15 @@ public class Info extends RenderableObject
 				g.fillRect(0, 0, 800, 600);
 
 				g.setColor(Color.BLACK);
-				g.setFont(new Font(g.getFont().toString(), 0, 30));
-				g.drawString("This program should calculate", 10, 25);
-				g.drawString("the shortest Path between all the points.", 10, 50);
-				g.drawString("Left Click and drag to move Nodes", 10, 75);
-				g.drawString("Right click to add a new Node", 10, 100);
-				g.drawString("Press Space to re-calculate the path", 10, 125);
-				g.drawString("For some reason the simulation becomes stale after", 10, 150);
-				g.drawString("a while, if so, press space", 10, 175);
+				g.setFont(new Font(g.getFont().toString(), 0, 25));
+				g.drawString("This program will try to calculate the shortest Path between", 10, 25);
+				g.drawString("all of the 'Nodes' on the screen.", 10, 50);
+				g.drawString("Left Click and drag to move Nodes", 10, 100);
+				g.drawString("Right click to add a new Node", 10, 125);
+
+				g.drawString("Press 'space' reset all solutions", 10, 175);
+				g.drawString("Press 'g' to add a grid of Nodes", 10, 200);
+				g.drawString("Press 'c' to clear all Nodes", 10, 225);
 			}
 
 		@Override

@@ -27,7 +27,8 @@ public class Solution
 						solution[i] = n;
 						i++;
 					}
-					
+				
+				calculateTourLength();
 
 				switch (Tools.randInt(0, 3))
 					{

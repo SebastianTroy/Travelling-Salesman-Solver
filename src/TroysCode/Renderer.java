@@ -62,9 +62,7 @@ public class Renderer extends Canvas
 		 */
 		private int timeToRender = 0;
 
-		public Renderer()
-			{
-			}
+		long lastTime = System.nanoTime();
 
 		/**
 		 * This method is called by the {@link hub} once instances of all of the
@@ -152,8 +150,6 @@ public class Renderer extends Canvas
 			{
 				int frames = 0;
 				double secondCounter = 0.0;
-
-				long lastTime = System.nanoTime();
 
 				while (true)
 					{

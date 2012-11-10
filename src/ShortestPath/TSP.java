@@ -30,16 +30,15 @@ public class TSP extends RenderableObject
 
 		// The population of solutions are all independant and compete in a hill
 		// climber esque manner
-		private final Solution[] tourPaths = new Solution[10];
+		private final Solution[] solutionsArray = new Solution[1000];
 		private int bestSolution;
 
 		// A small graph to show the % solutions that were improved upon each
 		// tick
-		private int graphXPos;
-		private int improvmentsThisTick = 0;
-		private final int[] graphData = new int[100];
+		private double percentImprovedLastSecond = 0;
+		private double averageImprovement = 0;
 
-		private TButton showBestButton = new TButton(5, 5, 80, 30, "Show Best");
+		private TButton showBestButton = new TButton(10, 0, "Showing [Best] Solution");
 		private boolean showBest = true;
 
 		@Override
@@ -50,8 +49,8 @@ public class TSP extends RenderableObject
 				for (int x = 0; x < 6; x++)
 					addNode(new Node(Tools.randInt(50, 750), Tools.randInt(50, 500)));
 
-				for (int i = 0; i < tourPaths.length; i++)
-					tourPaths[i] = new Solution();
+				for (int i = 0; i < solutionsArray.length; i++)
+					solutionsArray[i] = new Solution();
 			}
 
 		@Override
@@ -70,10 +69,10 @@ public class TSP extends RenderableObject
 						{
 							nodes.remove(n);
 
-							for (Solution s : tourPaths)
+							for (Solution s : solutionsArray)
 								s.reset();
 
-							bestSolution = Tools.randInt(0, tourPaths.length);
+							bestSolution = Tools.randInt(0, solutionsArray.length - 1);
 						}
 
 				// add new nodes
@@ -82,42 +81,48 @@ public class TSP extends RenderableObject
 						for (Node n : nodesToAdd)
 							nodes.add(n);
 
-						for (Solution s : tourPaths)
+						for (Solution s : solutionsArray)
 							s.reset();
 
-						bestSolution = Tools.randInt(0, tourPaths.length);
+						bestSolution = Tools.randInt(0, solutionsArray.length - 1);
 
 						nodesToAdd.clear();
 					}
 
-				// Basically there are a number of hillclimbers competing
-				// against each other
-				for (int i = 0; i < tourPaths.length; i++)
+				if (nodes.size() > 0)
 					{
-						Solution s = tourPaths[i];
-						Solution mutant = new Solution(s);
-						
-						if (mutant.tourLength < s.tourLength)
+
+						// Basically there are a number of hillclimbers
+						// competing
+						// against each other
+						int numImproved = 0;
+						for (int i = 0; i < solutionsArray.length; i++)
 							{
-								improvmentsThisTick++;
-								s = mutant;
+								Solution mutant = new Solution(solutionsArray[i]);
+
+								if (mutant.tourLength < solutionsArray[i].tourLength)
+									{
+										numImproved++;
+										solutionsArray[i] = mutant;
+									}
+								else if (mutant.tourLength == solutionsArray[i].tourLength)
+									{
+										solutionsArray[i] = mutant;
+									}
 								if (showBest)
 									{
-										if (s.tourLength < tourPaths[bestSolution].tourLength)
+										if (solutionsArray[i].tourLength < solutionsArray[bestSolution].tourLength)
 											bestSolution = i;
 									}
-								else if (s.tourLength > tourPaths[bestSolution].tourLength)
+								else if (solutionsArray[i].tourLength > solutionsArray[bestSolution].tourLength)
 									bestSolution = i;
-
 							}
+
+						percentImprovedLastSecond = ((double) numImproved / (double) solutionsArray.length) / secondsPassed;
+
+						if (averageImprovement != percentImprovedLastSecond)
+							averageImprovement -= (averageImprovement - percentImprovedLastSecond) * secondsPassed;
 					}
-
-				graphData[graphXPos] = improvmentsThisTick;
-
-				graphXPos++;
-				if (graphXPos > graphData.length - 1)
-					graphXPos = 0;
-				improvmentsThisTick = 0;
 			}
 
 		@Override
@@ -127,20 +132,20 @@ public class TSP extends RenderableObject
 				g.fillRect(0, 0, 800, 600);
 
 				g.setColor(Color.RED);
-				for (int i = 0; i < graphData.length; i++)
-					g.drawLine(0, i, (int) ((graphData[i] / (double) tourPaths.length) * 200), i);
+				int barLength = (int) (Math.log10(averageImprovement + 1) * 300);
+				g.fillRect(0, 0, 10, (int) barLength);
 
 				g.setColor(Color.WHITE);
-				g.drawString("Press 'h' for help", 10, 120);
+				g.drawString("Press 'h' for help", 10, 40);
 
 				g.setColor(Color.BLUE);
 				for (Node n : nodes)
 					g.fillOval(n.x - (nodeSize / 2), n.y - (nodeSize / 2), nodeSize, nodeSize);
 
 				g.setColor(Color.WHITE);
-				for (int i = 0; i < tourPaths[bestSolution].solution.length - 1; i++)
-					g.drawLine(tourPaths[bestSolution].solution[i].x, tourPaths[bestSolution].solution[i].y, tourPaths[bestSolution].solution[i + 1].x,
-							tourPaths[bestSolution].solution[i + 1].y);
+				for (int i = 0; i < solutionsArray[bestSolution].solution.length - 1; i++)
+					g.drawLine(solutionsArray[bestSolution].solution[i].x, solutionsArray[bestSolution].solution[i].y,
+							solutionsArray[bestSolution].solution[i + 1].x, solutionsArray[bestSolution].solution[i + 1].y);
 			}
 
 		public Node[] getNodes()
@@ -161,7 +166,7 @@ public class TSP extends RenderableObject
 				if (event.getSource() == showBestButton)
 					showBest = !showBest;
 
-				showBestButton.setLabel(showBest ? "Show Best" : "Show Worst");
+				showBestButton.setLabel(showBest ? "Showing [Best] Solution" : "Showing [Worst] Solution");
 			}
 
 		@Override
@@ -190,7 +195,7 @@ public class TSP extends RenderableObject
 			{
 				for (Node n : nodes)
 					n.mouseDragged(event);
-				for (Solution s : tourPaths)
+				for (Solution s : solutionsArray)
 					s.calculateTourLength();
 			}
 
@@ -208,12 +213,23 @@ public class TSP extends RenderableObject
 		protected void keyPressed(KeyEvent event)
 			{
 				if (event.getKeyCode() == 32)
-					for (Solution s : tourPaths)
+					for (Solution s : solutionsArray)
 						{
 							s.reset();
 						}
 				else if (event.getKeyChar() == 'h')
 					changeRenderableObject(hub.info);
+				else if (event.getKeyChar() == 'g')// add grid
+					{
+						for (int x = 0; x < 7; x++)
+							for (int y = 0; y < 5; y++)
+								addNode(new Node(75 + (x * 100), 75 + (y * 100)));
+					}
+				else if (event.getKeyChar() == 'c')// clear nodes
+					{
+						for (Node n : nodes)
+							n.exists = false;
+					}
 			}
 
 		@Override
