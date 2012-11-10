@@ -217,7 +217,7 @@ public class TSP extends RenderableObject
 						{
 							s.reset();
 						}
-				else if (event.getKeyChar() == 'h')
+				else if (event.getKeyChar() == 'h')// view help
 					changeRenderableObject(hub.info);
 				else if (event.getKeyChar() == 'g')// add grid
 					{
@@ -229,6 +229,23 @@ public class TSP extends RenderableObject
 					{
 						for (Node n : nodes)
 							n.exists = false;
+					}
+				else if (event.getKeyChar() == 'r')// random node
+					{
+						addNode(new Node(Tools.randInt(50, 750), Tools.randInt(50, 500)));
+					}
+				else if (event.getKeyChar() == 's')// shuffle nodes
+					{
+						int numNodes = nodes.size();
+						for (Node n : nodes)
+							n.exists = false;
+
+						for (int i = 0; i < numNodes; i++)
+							addNode(new Node(Tools.randInt(50, 750), Tools.randInt(50, 500)));
+					}
+				else if (event.getKeyChar() == 'd')// delete random node
+					{
+						nodes.get(Tools.randInt(0, nodes.size() - 1)).exists = false;
 					}
 			}
 
