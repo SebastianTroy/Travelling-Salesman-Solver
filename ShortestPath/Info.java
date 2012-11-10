@@ -55,9 +55,9 @@ public class Info extends RenderableObject
 				g.drawString("Press 'space' reset all solutions", 10, 175);
 				g.drawString("Press 'g' to add a grid of Nodes", 10, 200);
 				g.drawString("Press 'r' to add a randomly placed Nodes", 10, 225);
-				g.drawString("Press 'd' to delete a random Node", 10, 225);
-				g.drawString("Press 's' to shuffle the positions of the current Nodes", 10, 250);
-				g.drawString("Press 'c' to clear all Nodes", 10, 275);
+				g.drawString("Press 'd' to delete a random Node", 10, 250);
+				g.drawString("Press 's' to shuffle the positions of the current Nodes", 10, 275);
+				g.drawString("Press 'c' to clear all Nodes", 10, 300);
 			}
 
 		@Override
