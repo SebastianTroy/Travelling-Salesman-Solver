@@ -2,8 +2,9 @@ package ShortestPath;
 
 import java.awt.event.MouseEvent;
 
-import TroysCode.Tools;
-import TroysCode.hub;
+import tCode.Hub;
+import tCode.Tools;
+
 
 public class Node
 	{
@@ -20,7 +21,7 @@ public class Node
 
 		public final void mousePressed(MouseEvent e)
 			{
-				if (Tools.getVectorLength(e.getX(), e.getY(), x, y) < hub.tsp.nodeSize / 2)
+				if (Tools.getVectorLength(e.getX(), e.getY(), x, y) < Hub.tsp.nodeSize / 2)
 					{
 						selected = true;
 					}

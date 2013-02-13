@@ -2,26 +2,20 @@ package ShortestPath;
 
 import java.awt.Color;
 import java.awt.Graphics;
-import java.awt.event.ActionEvent;
-import java.awt.event.ComponentEvent;
 import java.awt.event.KeyEvent;
 import java.awt.event.MouseEvent;
-import java.awt.event.MouseWheelEvent;
-import java.awt.event.WindowEvent;
 import java.util.ArrayList;
 
-import TroysCode.RenderableObject;
-import TroysCode.Tools;
-import TroysCode.hub;
-import TroysCode.T.TButton;
-import TroysCode.T.TScrollEvent;
+import tCode.Hub;
+import tCode.RenderableObject;
+import tCode.Tools;
+import tComponents.components.TButton;
+import tComponents.utils.events.TActionEvent;
 
 public class TSP extends RenderableObject
 	{
-		private static final long serialVersionUID = 1L;
-
 		// Nodes can be added and moved and removed using the mouse, which runs
-		// on a seperate thread, therefore to stop concurrent modification
+		// on a separate thread, therefore to stop concurrent modification
 		// exceptions they are first added to a temporary array, and copied
 		// across into the main arraylist by the main thread afterwards
 		private ArrayList<Node> nodes = new ArrayList<Node>();
@@ -38,7 +32,7 @@ public class TSP extends RenderableObject
 		private double percentImprovedLastSecond = 0;
 		private double averageImprovement = 0;
 
-		private TButton showBestButton = new TButton(10, 0, "Showing [Best] Solution");
+		private TButton showBestButton = new TButton(10, 0, 160, 30, "Showing [Best] Solution");
 		private boolean showBest = true;
 
 		@Override
@@ -54,12 +48,7 @@ public class TSP extends RenderableObject
 			}
 
 		@Override
-		protected void refresh()
-			{
-			}
-
-		@Override
-		protected void tick(double secondsPassed)
+		public void tick(double secondsPassed)
 			{
 				// remove unwanted nodes
 				Node[] nodeCopy = new Node[nodes.size()];
@@ -119,29 +108,29 @@ public class TSP extends RenderableObject
 							}
 
 						percentImprovedLastSecond = ((double) numImproved / (double) solutionsArray.length) / secondsPassed;
-
+						
 						if (averageImprovement != percentImprovedLastSecond)
 							averageImprovement -= (averageImprovement - percentImprovedLastSecond) * secondsPassed;
 					}
 			}
 
 		@Override
-		protected void renderObject(Graphics g)
+		protected void render(Graphics g)
 			{
 				g.setColor(Color.BLACK);
-				g.fillRect(0, 0, 800, 600);
-
+				g.fillRect(0, 0, Hub.canvasWidth, Hub.canvasHeight);
+				
 				g.setColor(Color.RED);
 				int barLength = (int) (Math.log10((averageImprovement * 2) + 1) * 300);
 				g.fillRect(0, 0, 10, (int) barLength);
-
+		
 				g.setColor(Color.WHITE);
 				g.drawString("Press 'h' for help", 10, 40);
-
+		
 				g.setColor(Color.BLUE);
 				for (Node n : nodes)
 					g.fillOval(n.x - (nodeSize / 2), n.y - (nodeSize / 2), nodeSize, nodeSize);
-
+		
 				g.setColor(Color.WHITE);
 				for (int i = 0; i < solutionsArray[bestSolution].solution.length - 1; i++)
 					g.drawLine(solutionsArray[bestSolution].solution[i].x, solutionsArray[bestSolution].solution[i].y,
@@ -161,16 +150,16 @@ public class TSP extends RenderableObject
 			}
 
 		@Override
-		protected void actionPerformed(ActionEvent event)
+		public void tActionPerformed(TActionEvent event)
 			{
 				if (event.getSource() == showBestButton)
 					showBest = !showBest;
 
-				showBestButton.setLabel(showBest ? "Showing [Best] Solution" : "Showing [Worst] Solution");
+				showBestButton.setLabel(showBest ? "Showing [Best] Solution" : "Showing [Worst] Solution", true);
 			}
 
 		@Override
-		protected void mousePressed(MouseEvent event)
+		public void mousePressed(MouseEvent event)
 			{
 				if (event.getButton() == MouseEvent.BUTTON1)
 					{
@@ -183,7 +172,7 @@ public class TSP extends RenderableObject
 			}
 
 		@Override
-		protected void mouseReleased(MouseEvent event)
+		public void mouseReleased(MouseEvent event)
 			{
 				if (event.getButton() == MouseEvent.BUTTON1)
 					for (Node n : nodes)
@@ -191,7 +180,7 @@ public class TSP extends RenderableObject
 			}
 
 		@Override
-		protected void mouseDragged(MouseEvent event)
+		public void mouseDragged(MouseEvent event)
 			{
 				for (Node n : nodes)
 					n.mouseDragged(event);
@@ -200,17 +189,7 @@ public class TSP extends RenderableObject
 			}
 
 		@Override
-		protected void mouseMoved(MouseEvent event)
-			{
-			}
-
-		@Override
-		protected void mouseWheelScrolled(MouseWheelEvent event)
-			{
-			}
-
-		@Override
-		protected void keyPressed(KeyEvent event)
+		public void keyPressed(KeyEvent event)
 			{
 				if (event.getKeyCode() == 32)
 					for (Solution s : solutionsArray)
@@ -218,7 +197,7 @@ public class TSP extends RenderableObject
 							s.reset();
 						}
 				else if (event.getKeyChar() == 'h')// view help
-					changeRenderableObject(hub.info);
+					Hub.renderer.changeRenderableObject(Hub.info);
 				else if (event.getKeyChar() == 'g')// add grid
 					{
 						for (int x = 0; x < 7; x++)
@@ -229,7 +208,7 @@ public class TSP extends RenderableObject
 					{
 						for (Node n : nodes)
 							n.exists = false;
-						
+
 						averageImprovement = 0;
 					}
 				else if (event.getKeyChar() == 'r')// random node
@@ -249,50 +228,5 @@ public class TSP extends RenderableObject
 					{
 						nodes.get(Tools.randInt(0, nodes.size() - 1)).exists = false;
 					}
-			}
-
-		@Override
-		protected void keyReleased(KeyEvent event)
-			{
-			}
-
-		@Override
-		protected void keyTyped(KeyEvent event)
-			{
-			}
-
-		@Override
-		protected void mouseClicked(MouseEvent event)
-			{
-			}
-
-		@Override
-		protected void mouseEntered(MouseEvent event)
-			{
-			}
-
-		@Override
-		protected void mouseExited(MouseEvent event)
-			{
-			}
-
-		@Override
-		protected void programGainedFocus(WindowEvent event)
-			{
-			}
-
-		@Override
-		protected void programLostFocus(WindowEvent event)
-			{
-			}
-
-		@Override
-		protected void frameResized(ComponentEvent event)
-			{
-			}
-
-		@Override
-		public void tScrollBarScrolled(TScrollEvent event)
-			{
 			}
 	}

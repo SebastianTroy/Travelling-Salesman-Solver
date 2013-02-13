@@ -3,44 +3,32 @@ package ShortestPath;
 import java.awt.Color;
 import java.awt.Font;
 import java.awt.Graphics;
-import java.awt.event.ActionEvent;
-import java.awt.event.ComponentEvent;
-import java.awt.event.KeyEvent;
 import java.awt.event.MouseEvent;
-import java.awt.event.MouseWheelEvent;
-import java.awt.event.WindowEvent;
 
-import TroysCode.RenderableObject;
-import TroysCode.hub;
-import TroysCode.T.TScrollEvent;
+import tCode.Hub;
+import tCode.RenderableObject;
+
 
 public class Info extends RenderableObject
 	{
-		private static final long serialVersionUID = 1L;
 		private boolean backToTSP = false;
 
 		@Override
 		protected void initiate()
-			{
-			}
+			{}
 
 		@Override
-		protected void refresh()
-			{
-			}
-
-		@Override
-		protected void tick(double secondsPassed)
+		public void tick(double secondsPassed)
 			{
 				if (backToTSP)
 					{
 						backToTSP = false;
-						changeRenderableObject(hub.tsp);
+						Hub.renderer.changeRenderableObject(Hub.tsp);
 					}
 			}
 
 		@Override
-		protected void renderObject(Graphics g)
+		protected void render(Graphics g)
 			{
 				g.setColor(Color.WHITE);
 				g.fillRect(0, 0, 800, 600);
@@ -61,83 +49,8 @@ public class Info extends RenderableObject
 			}
 
 		@Override
-		protected void mousePressed(MouseEvent event)
+		public void mousePressed(MouseEvent event)
 			{
 				backToTSP = true;
-			}
-
-		@Override
-		protected void mouseReleased(MouseEvent event)
-			{
-			}
-
-		@Override
-		protected void mouseDragged(MouseEvent event)
-			{
-			}
-
-		@Override
-		protected void mouseMoved(MouseEvent event)
-			{
-			}
-
-		@Override
-		protected void mouseWheelScrolled(MouseWheelEvent event)
-			{
-			}
-
-		@Override
-		protected void actionPerformed(ActionEvent event)
-			{
-			}
-
-		@Override
-		protected void keyPressed(KeyEvent event)
-			{
-			}
-
-		@Override
-		protected void keyReleased(KeyEvent event)
-			{
-			}
-
-		@Override
-		protected void keyTyped(KeyEvent event)
-			{
-			}
-
-		@Override
-		protected void mouseClicked(MouseEvent event)
-			{
-			}
-
-		@Override
-		protected void mouseEntered(MouseEvent event)
-			{
-			}
-
-		@Override
-		protected void mouseExited(MouseEvent event)
-			{
-			}
-
-		@Override
-		protected void programGainedFocus(WindowEvent event)
-			{
-			}
-
-		@Override
-		protected void programLostFocus(WindowEvent event)
-			{
-			}
-
-		@Override
-		protected void frameResized(ComponentEvent event)
-			{
-			}
-
-		@Override
-		public void tScrollBarScrolled(TScrollEvent event)
-			{
 			}
 	}

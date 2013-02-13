@@ -4,8 +4,9 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 
-import TroysCode.Tools;
-import TroysCode.hub;
+import tCode.Hub;
+import tCode.Tools;
+
 
 public class Solution
 	{
@@ -97,7 +98,7 @@ public class Solution
 
 		public final void reset()
 			{
-				solution = hub.tsp.getNodes();
+				solution = Hub.tsp.getNodes();
 				Collections.shuffle(Arrays.asList(solution));
 
 				calculateTourLength();
