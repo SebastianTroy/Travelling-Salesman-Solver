@@ -19,7 +19,7 @@ public class Node
 
 		public final void mousePressed(MouseEvent e)
 			{
-				if (NumTools.distance(e.getX(), e.getY(), x, y) < Hub.tsp.nodeSize / 2)
+				if (NumTools.distance(e.getX(), e.getY(), x, y) < Main.tsp.nodeSize / 2)
 					{
 						selected = true;
 					}

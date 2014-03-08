@@ -1,4 +1,3 @@
 Manifest-Version: 1.0
-Sealed: true
-Main-Class: TroysCode.hub
+Main-Class: ShortestPath.Main
 

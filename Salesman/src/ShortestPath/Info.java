@@ -22,7 +22,7 @@ public class Info extends RenderableObject
 				if (backToTSP)
 					{
 						backToTSP = false;
-						changeRenderableObject(Hub.tsp);
+						changeRenderableObject(Main.tsp);
 					}
 			}
 

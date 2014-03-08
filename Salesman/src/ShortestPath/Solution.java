@@ -97,7 +97,7 @@ public class Solution
 
 		public final void reset()
 			{
-				solution = Hub.tsp.getNodes();
+				solution = Main.tsp.getNodes();
 				Collections.shuffle(Arrays.asList(solution));
 
 				calculateTourLength();

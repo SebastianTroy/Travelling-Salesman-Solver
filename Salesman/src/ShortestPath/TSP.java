@@ -1,7 +1,6 @@
 package ShortestPath;
 
 import java.awt.Color;
-import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.event.KeyEvent;
 import java.awt.event.MouseEvent;
@@ -118,7 +117,7 @@ public class TSP extends RenderableObject
 		protected void render(Graphics2D g)
 			{
 				g.setColor(Color.BLACK);
-				g.fillRect(0, 0, Hub.canvasWidth, Hub.canvasHeight);
+				g.fillRect(0, 0, Main.canvasWidth, Main.canvasHeight);
 				
 				g.setColor(Color.RED);
 				int barLength = (int) (Math.log10((averageImprovement * 2) + 1) * 300);
@@ -197,7 +196,7 @@ public class TSP extends RenderableObject
 							s.reset();
 						}
 				else if (event.getKeyChar() == 'h')// view help
-					changeRenderableObject(Hub.info);
+					changeRenderableObject(Main.info);
 				else if (event.getKeyChar() == 'g')// add grid
 					{
 						for (int x = 0; x < 7; x++)
