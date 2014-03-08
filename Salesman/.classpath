@@ -3,5 +3,7 @@
 	<classpathentry kind="src" path="src"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
 	<classpathentry combineaccessrules="false" kind="src" path="/TComponents"/>
+	<classpathentry combineaccessrules="false" kind="src" path="/TCode"/>
+	<classpathentry combineaccessrules="false" kind="src" path="/Tools"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>
