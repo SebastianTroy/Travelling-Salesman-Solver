@@ -1,0 +1,10 @@
+/Salesman/bin
+/Salesman/.classpath
+/Salesman/.settings
+/Salesman/.project
+
+*.class
+
+# Package Files #
+*.war
+*.ear
