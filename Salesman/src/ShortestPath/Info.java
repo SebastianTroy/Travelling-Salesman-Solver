@@ -2,10 +2,9 @@ package ShortestPath;
 
 import java.awt.Color;
 import java.awt.Font;
-import java.awt.Graphics;
+import java.awt.Graphics2D;
 import java.awt.event.MouseEvent;
 
-import tCode.Hub;
 import tCode.RenderableObject;
 
 
@@ -23,12 +22,12 @@ public class Info extends RenderableObject
 				if (backToTSP)
 					{
 						backToTSP = false;
-						Hub.renderer.changeRenderableObject(Hub.tsp);
+						changeRenderableObject(Hub.tsp);
 					}
 			}
 
 		@Override
-		protected void render(Graphics g)
+		protected void render(Graphics2D g)
 			{
 				g.setColor(Color.WHITE);
 				g.fillRect(0, 0, 800, 600);

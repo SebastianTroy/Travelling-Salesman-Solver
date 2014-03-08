@@ -4,9 +4,8 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 
-import tCode.Hub;
-import tCode.Tools;
-
+import tools.NumTools;
+import tools.RandTools;
 
 public class Solution
 	{
@@ -32,10 +31,10 @@ public class Solution
 
 				calculateTourLength();
 
-				if (Tools.randBool())
+				if (RandTools.getBool())
 					swapNeighbors();
 				else
-					nOpt(Tools.randInt(2, solution.length / 2));
+					nOpt(RandTools.getInt(2, solution.length / 2));
 
 				calculateTourLength();
 			}
@@ -45,7 +44,7 @@ public class Solution
 				Node[] oldSol = solution.clone();
 
 				// Choose two nodes to swap
-				int swap = Tools.randInt(0, oldSol.length - 1);
+				int swap = RandTools.getInt(0, oldSol.length - 1);
 
 				if (swap == oldSol.length - 1)
 				// swap first and last nodes around
@@ -74,7 +73,7 @@ public class Solution
 				ArrayList<Integer> swapPoints = new ArrayList<Integer>();
 				while (swapPoints.size() < numSwaps)
 					{
-						int newSwap = Tools.randInt(0, solution.length - 1);
+						int newSwap = RandTools.getInt(0, solution.length - 1);
 						boolean unique = true;
 						for (Integer swapPoint : swapPoints)
 							if (swapPoint == newSwap)
@@ -109,6 +108,6 @@ public class Solution
 			{
 				tourLength = 0;
 				for (int i = 0; i < solution.length - 1; i++)
-					tourLength += Tools.getVectorLength(solution[i].x, solution[i].y, solution[i + 1].x, solution[i + 1].y);
+					tourLength += NumTools.distance(solution[i].x, solution[i].y, solution[i + 1].x, solution[i + 1].y);
 			}
 	}

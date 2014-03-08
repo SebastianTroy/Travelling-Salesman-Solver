@@ -2,9 +2,7 @@ package ShortestPath;
 
 import java.awt.event.MouseEvent;
 
-import tCode.Hub;
-import tCode.Tools;
-
+import tools.NumTools;
 
 public class Node
 	{
@@ -21,7 +19,7 @@ public class Node
 
 		public final void mousePressed(MouseEvent e)
 			{
-				if (Tools.getVectorLength(e.getX(), e.getY(), x, y) < Hub.tsp.nodeSize / 2)
+				if (NumTools.distance(e.getX(), e.getY(), x, y) < Hub.tsp.nodeSize / 2)
 					{
 						selected = true;
 					}

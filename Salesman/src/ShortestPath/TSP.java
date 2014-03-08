@@ -2,15 +2,15 @@ package ShortestPath;
 
 import java.awt.Color;
 import java.awt.Graphics;
+import java.awt.Graphics2D;
 import java.awt.event.KeyEvent;
 import java.awt.event.MouseEvent;
 import java.util.ArrayList;
 
-import tCode.Hub;
 import tCode.RenderableObject;
-import tCode.Tools;
 import tComponents.components.TButton;
 import tComponents.utils.events.TActionEvent;
+import tools.RandTools;
 
 public class TSP extends RenderableObject
 	{
@@ -38,10 +38,10 @@ public class TSP extends RenderableObject
 		@Override
 		protected void initiate()
 			{
-				addTComponent(showBestButton);
+				add(showBestButton);
 
 				for (int x = 0; x < 6; x++)
-					addNode(new Node(Tools.randInt(50, 750), Tools.randInt(50, 500)));
+					addNode(new Node(RandTools.getInt(50, 750), RandTools.getInt(50, 500)));
 
 				for (int i = 0; i < solutionsArray.length; i++)
 					solutionsArray[i] = new Solution();
@@ -61,7 +61,7 @@ public class TSP extends RenderableObject
 							for (Solution s : solutionsArray)
 								s.reset();
 
-							bestSolution = Tools.randInt(0, solutionsArray.length - 1);
+							bestSolution = RandTools.getInt(0, solutionsArray.length - 1);
 						}
 
 				// add new nodes
@@ -73,7 +73,7 @@ public class TSP extends RenderableObject
 						for (Solution s : solutionsArray)
 							s.reset();
 
-						bestSolution = Tools.randInt(0, solutionsArray.length - 1);
+						bestSolution = RandTools.getInt(0, solutionsArray.length - 1);
 
 						nodesToAdd.clear();
 					}
@@ -115,7 +115,7 @@ public class TSP extends RenderableObject
 			}
 
 		@Override
-		protected void render(Graphics g)
+		protected void render(Graphics2D g)
 			{
 				g.setColor(Color.BLACK);
 				g.fillRect(0, 0, Hub.canvasWidth, Hub.canvasHeight);
@@ -150,12 +150,12 @@ public class TSP extends RenderableObject
 			}
 
 		@Override
-		public void tActionPerformed(TActionEvent event)
+		public void tActionEvent(TActionEvent event)
 			{
 				if (event.getSource() == showBestButton)
 					showBest = !showBest;
 
-				showBestButton.setLabel(showBest ? "Showing [Best] Solution" : "Showing [Worst] Solution", true);
+				showBestButton.setLabel(showBest ? "Showing [Best] Solution" : "Showing [Worst] Solution");
 			}
 
 		@Override
@@ -197,7 +197,7 @@ public class TSP extends RenderableObject
 							s.reset();
 						}
 				else if (event.getKeyChar() == 'h')// view help
-					Hub.renderer.changeRenderableObject(Hub.info);
+					changeRenderableObject(Hub.info);
 				else if (event.getKeyChar() == 'g')// add grid
 					{
 						for (int x = 0; x < 7; x++)
@@ -213,7 +213,7 @@ public class TSP extends RenderableObject
 					}
 				else if (event.getKeyChar() == 'r')// random node
 					{
-						addNode(new Node(Tools.randInt(50, 750), Tools.randInt(50, 500)));
+						addNode(new Node(RandTools.getInt(50, 750), RandTools.getInt(50, 500)));
 					}
 				else if (event.getKeyChar() == 's')// shuffle nodes
 					{
@@ -222,11 +222,11 @@ public class TSP extends RenderableObject
 							n.exists = false;
 
 						for (int i = 0; i < numNodes; i++)
-							addNode(new Node(Tools.randInt(50, 750), Tools.randInt(50, 500)));
+							addNode(new Node(RandTools.getInt(50, 750), RandTools.getInt(50, 500)));
 					}
 				else if (event.getKeyChar() == 'd')// delete random node
 					{
-						nodes.get(Tools.randInt(0, nodes.size() - 1)).exists = false;
+						nodes.get(RandTools.getInt(0, nodes.size() - 1)).exists = false;
 					}
 			}
 	}
