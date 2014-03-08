@@ -1,7 +1,7 @@
-/Salesman/bin
-/Salesman/.classpath
-/Salesman/.settings
-/Salesman/.project
+Salesman/bin
+Salesman/.classpath
+Salesman/.settings
+Salesman/.project
 
 *.class
 
