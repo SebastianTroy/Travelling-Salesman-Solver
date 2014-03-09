@@ -2,230 +2,585 @@ package ShortestPath;
 
 import java.awt.Color;
 import java.awt.Graphics2D;
-import java.awt.event.KeyEvent;
+import java.awt.Point;
 import java.awt.event.MouseEvent;
 import java.util.ArrayList;
+import java.util.Collection;
 
 import tCode.RenderableObject;
+import tCode.TCode;
 import tComponents.components.TButton;
-import tComponents.utils.events.TActionEvent;
-import tools.RandTools;
+import tComponents.components.TLabel;
+import tComponents.components.TMenu;
+import tComponents.components.TRadioButton;
+import tComponents.components.TRadioButtonCollection;
+import tools.DrawTools;
+import tools.NumTools;
+import tools.Rand;
+import tools.WindowTools;
 
+/**
+ * A city knows only its location and the cities before and after it in the travelling salesman's tour.
+ * 
+ * @author Sebastian Troy
+ */
 public class TSP extends RenderableObject
 	{
-		// Nodes can be added and moved and removed using the mouse, which runs
-		// on a separate thread, therefore to stop concurrent modification
-		// exceptions they are first added to a temporary array, and copied
-		// across into the main arraylist by the main thread afterwards
-		private ArrayList<Node> nodes = new ArrayList<Node>();
-		private ArrayList<Node> nodesToAdd = new ArrayList<Node>();
-		protected int nodeSize = 20;
+		// Constants
+		private static final int MENU_HEIGHT = 30;
 
-		// The population of solutions are all independant and compete in a hill
-		// climber esque manner
-		private final Solution[] solutionsArray = new Solution[1000];
-		private int bestSolution;
+		private static final int CITY_DIAMETER = 20;
+		private static final int CITY_RADIUS = CITY_DIAMETER / 2;
 
-		// A small graph to show the % solutions that were improved upon each
-		// tick
-		private double percentImprovedLastSecond = 0;
-		private double averageImprovement = 0;
+		private static final Color BACKGROUND_COLOUR = Color.BLACK;
+		private static final Color CITY_COLOUR = Color.BLUE;
+		private static final Color ROUTE_COLOUR = Color.WHITE;
+		private static final Color SELECTED_COLOUR = Color.YELLOW;
 
-		private TButton showBestButton = new TButton(10, 0, 160, 30, "Showing [Best] Solution");
-		private boolean showBest = true;
+		// Menu variables @formatter:off
+		private TMenu menu;
+		private final TButton clearButton = new TButton("Remove All Cities"){ @Override public void pressed(){tour.clear(); redraw = true;}};
+		private final TButton resetButton = new TButton("Reset Solution"){ @Override public void pressed(){shuffleCities();}};
+		private final TButton randomCityButton = new TButton("Add Random City"){ @Override public void pressed(){addCity(new City(Rand.int_(0 + CITY_RADIUS, Main.canvasWidth - CITY_RADIUS),Rand.int_(MENU_HEIGHT + CITY_RADIUS, Main.canvasHeight - CITY_RADIUS)));}};
+		private final TButton tenRandomCityButton = new TButton("Add 10 Random Cities"){ @Override public void pressed(){for (int i = 0; i < 10; i++) addCity(new City(Rand.int_(0 + CITY_RADIUS, Main.canvasWidth - CITY_RADIUS),Rand.int_(MENU_HEIGHT + CITY_RADIUS, Main.canvasHeight - CITY_RADIUS)));}};
+		private final TButton addGridButton = new TButton("Add 6 * 6 Grid"){ @Override public void pressed(){for (int x = 0; x < 6; x++) for (int y = 0; y < 6; y++) addCity(new City(50 + (x * ((Main.canvasWidth - 100)/5)),50 + MENU_HEIGHT + (y * ((Main.canvasHeight - 100 - MENU_HEIGHT)/5))));}};
+		private final TRadioButtonCollection radioButtons = new TRadioButtonCollection();
+		private final TRadioButton newCityButton = new TRadioButton("New City");
+		private final TRadioButton moveCityButton = new TRadioButton("Move City");
+		private final TRadioButton removeCityButton = new TRadioButton("Remove City");
+
+		// Salesman Solver Variables @formatter:on
+		private ArrayList<City> tour = new ArrayList<City>();
+
+		// Only set to true if the tour has changed
+		private boolean redraw = true;
 
 		@Override
-		protected void initiate()
+		public final void initiate()
 			{
-				add(showBestButton);
+				// Set the size of the window
+				TCode.frame.setBounds(TCode.frame.getX() + 50, TCode.frame.getY() + 50, TCode.frame.getWidth() - 100, TCode.frame.getHeight() - 100);
 
-				for (int x = 0; x < 6; x++)
-					addNode(new Node(RandTools.getInt(50, 750), RandTools.getInt(50, 500)));
+				// Set up the radio buttons
+				radioButtons.add(newCityButton);
+				radioButtons.add(moveCityButton);
+				radioButtons.add(removeCityButton);
 
-				for (int i = 0; i < solutionsArray.length; i++)
-					solutionsArray[i] = new Solution();
+				// Set up the menu
+				menu = new TMenu(0, 0, Main.canvasWidth, MENU_HEIGHT, TMenu.HORIZONTAL);
+				menu.setTComponentAlignment(TMenu.ALIGN_START);
+				menu.setBorderSize(2);
+
+				// add the menu
+				add(menu);
+				menu.add(clearButton);
+				menu.add(resetButton);
+				menu.add(randomCityButton);
+				menu.add(tenRandomCityButton);
+				menu.add(addGridButton);
+				menu.add(new TLabel("Mouse controlls: "), false);
+				menu.add(newCityButton, false);
+				menu.add(moveCityButton, false);
+				menu.add(removeCityButton, false);
 			}
 
 		@Override
-		public void tick(double secondsPassed)
+		public final void tick(double secondsPassed)
 			{
-				// remove unwanted nodes
-				Node[] nodeCopy = new Node[nodes.size()];
-				nodes.toArray(nodeCopy);
-				for (Node n : nodeCopy)
-					if (!n.exists)
-						{
-							nodes.remove(n);
-
-							for (Solution s : solutionsArray)
-								s.reset();
-
-							bestSolution = RandTools.getInt(0, solutionsArray.length - 1);
-						}
-
-				// add new nodes
-				if (nodesToAdd.size() > 0)
+				// < 3 cities cannot be improved as only one tour is possible
+				if (tour.size() > 2)
 					{
-						for (Node n : nodesToAdd)
-							nodes.add(n);
+						// Copy and mutate the tour
+						ArrayList<City> tourCopy = getTourCopy();
+						mutateTour(tourCopy);
 
-						for (Solution s : solutionsArray)
-							s.reset();
-
-						bestSolution = RandTools.getInt(0, solutionsArray.length - 1);
-
-						nodesToAdd.clear();
-					}
-
-				if (nodes.size() > 0)
-					{
-
-						// Basically there are a number of hillclimbers
-						// competing
-						// against each other
-						int numImproved = 0;
-						for (int i = 0; i < solutionsArray.length; i++)
+						// If the mutant tour is better, keep it
+						if (calculateTourLength(tour) >= calculateTourLength(tourCopy))
 							{
-								Solution mutant = new Solution(solutionsArray[i]);
-
-								if (mutant.tourLength < solutionsArray[i].tourLength)
-									{
-										numImproved++;
-										solutionsArray[i] = mutant;
-									}
-								else if (mutant.tourLength == solutionsArray[i].tourLength)
-									{
-										solutionsArray[i] = mutant;
-									}
-								if (showBest)
-									{
-										if (solutionsArray[i].tourLength < solutionsArray[bestSolution].tourLength)
-											bestSolution = i;
-									}
-								else if (solutionsArray[i].tourLength > solutionsArray[bestSolution].tourLength)
-									bestSolution = i;
+								// clear the old tour
+								tour.clear();
+								// add the new tour
+								for (City c : tourCopy)
+									tour.add(c);
+								// draw the new tour
+								redraw = true;
 							}
-
-						percentImprovedLastSecond = ((double) numImproved / (double) solutionsArray.length) / secondsPassed;
-						
-						if (averageImprovement != percentImprovedLastSecond)
-							averageImprovement -= (averageImprovement - percentImprovedLastSecond) * secondsPassed;
 					}
 			}
 
 		@Override
 		protected void render(Graphics2D g)
 			{
-				g.setColor(Color.BLACK);
-				g.fillRect(0, 0, Main.canvasWidth, Main.canvasHeight);
-				
-				g.setColor(Color.RED);
-				int barLength = (int) (Math.log10((averageImprovement * 2) + 1) * 300);
-				g.fillRect(0, 0, 10, (int) barLength);
-		
-				g.setColor(Color.WHITE);
-				g.drawString("Press 'h' for help", 10, 40);
-		
-				g.setColor(Color.BLUE);
-				for (Node n : nodes)
-					g.fillOval(n.x - (nodeSize / 2), n.y - (nodeSize / 2), nodeSize, nodeSize);
-		
-				g.setColor(Color.WHITE);
-				for (int i = 0; i < solutionsArray[bestSolution].solution.length - 1; i++)
-					g.drawLine(solutionsArray[bestSolution].solution[i].x, solutionsArray[bestSolution].solution[i].y,
-							solutionsArray[bestSolution].solution[i + 1].x, solutionsArray[bestSolution].solution[i + 1].y);
+				// only if we need to update the tour
+				if (redraw)
+					{
+						// clear the screen
+						g.setColor(BACKGROUND_COLOUR);
+						g.fillRect(0, 0, Main.canvasWidth, Main.canvasHeight);
+
+						// Draw cities
+						g.setColor(CITY_COLOUR);
+						for (City c : tour)
+							{
+								g.fillOval(c.x - CITY_RADIUS, c.y - CITY_RADIUS, CITY_DIAMETER, CITY_DIAMETER);
+								if (c.selected)
+									{
+										g.setColor(SELECTED_COLOUR);
+										g.drawOval(c.x - CITY_RADIUS, c.y - CITY_RADIUS, CITY_DIAMETER, CITY_DIAMETER);
+										g.setColor(CITY_COLOUR);
+									}
+							}
+						// Draw the tour
+						g.setColor(ROUTE_COLOUR);
+						for (City c : tour)
+							if (c.hasNext())
+								{
+									// g.drawLine(c.x, c.y, c.getNext().x, c.getNext().y);
+									DrawTools.drawArrow(c.x, c.y, c.getNext().x, c.getNext().y, g, 10);
+								}
+
+						redraw = false;
+					}
 			}
 
-		public Node[] getNodes()
+		/**
+		 * Adds a city to the tour, so long as it is within valid bounds
+		 * 
+		 * @param c
+		 *            - The city to be added
+		 */
+		private final void addCity(City c)
 			{
-				Node[] nodesCopy = new Node[nodes.size()];
-				nodes.toArray(nodesCopy);
-				return nodesCopy;
+				if (c.x < 0 || c.x > Main.canvasWidth || c.y < MENU_HEIGHT || c.y > Main.canvasHeight)
+					{
+						WindowTools.informationWindow("City out of bounds!", "addCity in TSP");
+						return;
+					}
+
+				if (tour.size() > 0)
+					{
+						if (Rand.bool())
+							c.insertBefore(tour.get(Rand.int_(0, tour.size())));
+						else
+							c.insertAfter(tour.get(Rand.int_(0, tour.size())));
+
+						tour.add(c);
+					}
+				else
+					tour.add(c);
+
+				redraw = true;
 			}
 
-		private void addNode(Node n)
+		/**
+		 * @return - A hard copy of the tour
+		 */
+		private final ArrayList<City> getTourCopy()
 			{
-				nodesToAdd.add(n);
+				City city = null;
+
+				ArrayList<City> tourCopy = new ArrayList<City>(tour.size());
+
+				// Find the first City in the tour
+				for (City c : tour)
+					if (!c.hasPrevious())
+						city = c;
+
+				// Add the first city
+				tourCopy.add(new City(city.x, city.y));
+				// Add each sequential City and make sure it is linked in the correct order
+				for (int i = 1; i < tour.size(); i++)
+					{
+						city = city.getNext();
+						tourCopy.add(new City(city.x, city.y, tourCopy.get(i - 1), null, city.selected));
+					}
+
+				return tourCopy;
+			}
+
+		/**
+		 * Shuffles the cities into a random order, taking advantage of how {@link TSP#addCity(City)} adds a city into a random slot in the tour.
+		 */
+		private final void shuffleCities()
+			{
+				City[] cities = new City[tour.size()];
+				tour.toArray(cities);
+				tour.clear();
+
+				for (City c : cities)
+					addCity(c);
+			}
+
+		/**
+		 * Mutates the tour in one of the following ways:
+		 * <ul>
+		 * <li>Two cities swap their positions in the tour,</li>
+		 * <li>The start is joined to the end and a new start & end point are chosen,</li>
+		 * <li>The position of one city is randomised,</li>
+		 * <li>The position of a number of cities is randomised</li>
+		 * </ul>
+		 * 
+		 * @param tour
+		 *            - The tour to be changed in a random way (Note that changes are unlikely to be beneficial to tour length)
+		 */
+		private final void mutateTour(ArrayList<City> tour)
+			{
+				switch (Rand.int_(0, 4))
+					{
+						case 0: // Two cities swap their positions in the tour
+							tour.get(Rand.int_(0, tour.size())).swapWith(tour.get(Rand.int_(0, tour.size())));
+							break;
+
+						case 1: // The start is joined to the end, new start & end points are chosen
+							// Find the old ends
+							City oldStart = null,
+							oldEnd = null,
+							newStart = null;
+							for (City c : tour)
+								if (!c.hasPrevious())
+									oldStart = c;
+							for (City c : tour)
+								if (!c.hasNext())
+									oldEnd = c;
+							// Join the tour in a loop
+							oldEnd.next = oldStart;
+							oldStart.previous = oldEnd;
+
+							// Find a connection and break it
+							boolean connectionBroken = false;
+							do
+								{
+									newStart = tour.get(Rand.int_(0, tour.size()));
+									if (newStart.hasPrevious())
+										{
+											newStart.getPrevious().next = null;
+											newStart.previous = null;
+											connectionBroken = true;
+										}
+								}
+							while (!connectionBroken);
+							break;
+
+						case 2: // The position of one city is randomised
+							if (Rand.bool())
+								tour.get(Rand.int_(0, tour.size())).insertBefore(tour.get(Rand.int_(0, tour.size())));
+							else
+								tour.get(Rand.int_(0, tour.size())).insertAfter(tour.get(Rand.int_(0, tour.size())));
+							break;
+
+						case 3:
+							for (int i = Rand.int_(0, tour.size()); i > 0; i--)
+								if (Rand.bool())
+									tour.get(Rand.int_(0, tour.size())).insertBefore(tour.get(Rand.int_(0, tour.size())));
+								else
+									tour.get(Rand.int_(0, tour.size())).insertAfter(tour.get(Rand.int_(0, tour.size())));
+							break;
+					}
+			}
+
+		/**
+		 * @param tour
+		 *            - This tour to be calculated
+		 * @return - The length of the tour provided
+		 */
+		private final double calculateTourLength(Collection<City> tour)
+			{
+				double distance = 0;
+				// We don't even need to go through the tour from start to end
+				for (City c : tour)
+					if (c.hasNext())
+						distance += NumTools.distance(c.x, c.y, c.next.x, c.next.y);
+				return distance;
 			}
 
 		@Override
-		public void tActionEvent(TActionEvent event)
+		public final void mousePressed(MouseEvent e)
 			{
-				if (event.getSource() == showBestButton)
-					showBest = !showBest;
+				Point p = e.getPoint();
 
-				showBestButton.setLabel(showBest ? "Showing [Best] Solution" : "Showing [Worst] Solution");
+				// Add a new city at the mouse point
+				if (newCityButton.isChecked() && !(p.x < 0 || p.x > Main.canvasWidth || p.y < MENU_HEIGHT || p.y > Main.canvasHeight))
+					{
+						addCity(new City(p.x, p.y));
+					}
+				// Select A single city under the mouse point
+				else if (moveCityButton.isChecked())
+					{
+						// Make sure we don't select more than 1 city at a time
+						boolean citySelected = false;
+
+						for (City c : tour)
+							if (!citySelected && c.contains(p))
+								c.selected = citySelected = true;
+							else
+								c.selected = false;
+
+						redraw = true;
+					}
+				// Remove any cities under the mouse point
+				else if (removeCityButton.isChecked())
+					{
+						for (int i = 0; i < tour.size(); i++)
+							if (tour.get(i).contains(p))
+								{
+									tour.get(i).removeFromTour();
+									tour.remove(i);
+									i--;
+									redraw = true;
+								}
+					}
 			}
 
 		@Override
-		public void mousePressed(MouseEvent event)
+		public final void mouseDragged(MouseEvent e)
 			{
-				if (event.getButton() == MouseEvent.BUTTON1)
+				// Move the currently selected city and delete it if it is dragged out of bounds
+				if (moveCityButton.isChecked())
 					{
-						for (Node n : nodes)
-							n.mousePressed(event);
+						for (int i = 0; i < tour.size(); i++)
+							{
+								if (tour.get(i).selected == true)
+									{
+										if (e.getX() < 0 || e.getX() > Main.canvasWidth || e.getY() < MENU_HEIGHT || e.getY() > Main.canvasHeight)
+											{
+												tour.get(i).removeFromTour();
+												tour.remove(i);
+												i--;
+												redraw = true;
+												return;
+											}
+										else
+											{
+												tour.get(i).x = e.getX();
+												tour.get(i).y = e.getY();
+												redraw = true;
+												return;
+											}
+									}
+							}
 					}
-
-				else if (event.getButton() == MouseEvent.BUTTON3)
-					addNode(new Node(event.getX(), event.getY()));
 			}
 
-		@Override
-		public void mouseReleased(MouseEvent event)
+		/**
+		 * My first attempt at a double linked list, in this case representing cities. A city knows only if it is selected, the previous city in the tour to
+		 * which it belongs and the next city in the tour to which it belongs.
+		 * <p>
+		 * It can be inferred that the city is at the start of the tour if its previous city is null.
+		 * <p>
+		 * It can be inferred that the city is at the end of the tour if its next city is null.
+		 * 
+		 * @author Sebastian Troy
+		 */
+		private class City
 			{
-				if (event.getButton() == MouseEvent.BUTTON1)
-					for (Node n : nodes)
-						n.mouseReleased(event);
-			}
+				private City previous;
+				private City next;
 
-		@Override
-		public void mouseDragged(MouseEvent event)
-			{
-				for (Node n : nodes)
-					n.mouseDragged(event);
-				for (Solution s : solutionsArray)
-					s.calculateTourLength();
-			}
+				private boolean selected = false;
 
-		@Override
-		public void keyPressed(KeyEvent event)
-			{
-				if (event.getKeyCode() == 32)
-					for (Solution s : solutionsArray)
-						{
-							s.reset();
-						}
-				else if (event.getKeyChar() == 'h')// view help
-					changeRenderableObject(Main.info);
-				else if (event.getKeyChar() == 'g')// add grid
-					{
-						for (int x = 0; x < 7; x++)
-							for (int y = 0; y < 5; y++)
-								addNode(new Node(75 + (x * 100), 75 + (y * 100)));
-					}
-				else if (event.getKeyChar() == 'c')// clear nodes
-					{
-						for (Node n : nodes)
-							n.exists = false;
+				private int x, y;
 
-						averageImprovement = 0;
-					}
-				else if (event.getKeyChar() == 'r')// random node
+				/**
+				 * Used to create the very first city of a tour.
+				 * 
+				 * @param x
+				 *            - x location of the city
+				 * @param y
+				 *            - y location of the city
+				 */
+				private City(int x, int y)
 					{
-						addNode(new Node(RandTools.getInt(50, 750), RandTools.getInt(50, 500)));
+						this.x = x;
+						this.y = y;
+						this.previous = null;
+						this.next = null;
 					}
-				else if (event.getKeyChar() == 's')// shuffle nodes
-					{
-						int numNodes = nodes.size();
-						for (Node n : nodes)
-							n.exists = false;
 
-						for (int i = 0; i < numNodes; i++)
-							addNode(new Node(RandTools.getInt(50, 750), RandTools.getInt(50, 500)));
-					}
-				else if (event.getKeyChar() == 'd')// delete random node
+				/**
+				 * Used when copying a city into a new tour
+				 * 
+				 * @param x
+				 *            - x location of the city
+				 * @param y
+				 *            - y location of the city
+				 */
+				private City(int x, int y, boolean selected)
 					{
-						nodes.get(RandTools.getInt(0, nodes.size() - 1)).exists = false;
+						this(x, y);
+						this.selected = selected;
+					}
+
+				/**
+				 * Hard copies the specified city.
+				 * 
+				 * @param city
+				 *            - city to be copied.
+				 */
+				private City(City city)
+					{
+						x = city.x;
+						y = city.y;
+						previous = city.previous;
+						next = city.next;
+						selected = city.selected;
+					}
+
+				/**
+				 * Creates a new city and adds it to the tour
+				 * 
+				 * @param x
+				 *            - x location of the city
+				 * @param y
+				 *            - y location of the city
+				 * @param previous
+				 *            - the city that this city will be inserted after
+				 * @param next
+				 *            - the city that this city will be inserted before
+				 */
+				private City(int x, int y, City previous, City next, boolean selected)
+					{
+						this.x = x;
+						this.y = y;
+						this.previous = previous;
+						this.next = next;
+						this.selected = selected;
+
+						if (hasPrevious())
+							insertAfter(previous);
+						else if (hasNext())
+							insertBefore(next);
+						else
+							new Exception("Cannot add new city to existing tour without reference to position in tour");
+					}
+
+				/**
+				 * Returns false if this is the first city in the tour
+				 * 
+				 * @return - true if the next city in the tour == null
+				 */
+				private final boolean hasPrevious()
+					{
+						return previous != null;
+					}
+
+				/**
+				 * Returns false if this is the last city in the tour
+				 * 
+				 * @return - false if the next city in the tour == null
+				 */
+				private final boolean hasNext()
+					{
+						return next != null;
+					}
+
+				/**
+				 * @return - null if there is no previous city
+				 */
+				private final City getPrevious()
+					{
+						return previous;
+					}
+
+				/**
+				 * @return - null if there is no next city
+				 */
+				private final City getNext()
+					{
+						return next;
+					}
+
+				/**
+				 * This method will insert this {@link City} into the tour before a desired City.
+				 * 
+				 * @param city
+				 *            - city to be inserted into the tour before this one
+				 */
+				private final void insertBefore(City city)
+					{
+						// No need to do anything if we are inserting this before this
+						if (this == city)
+							return;
+
+						// If this city was previously linked, link up previous with next
+						removeFromTour();
+
+						// Link to our neighbouring cities
+						previous = city.getPrevious();
+						next = city;
+
+						// Tell our neighbouring cities to link to us
+						if (city.hasPrevious())
+							city.previous.next = this;
+						city.previous = this;
+					}
+
+				/**
+				 * This method will insert this {@link City} into the tour after a desired City.
+				 * 
+				 * @param city
+				 *            - city to be inserted into the tour after this one
+				 */
+				private final void insertAfter(City city)
+					{
+						// No need to do anything if we are inserting this before this
+						if (this == city)
+							return;
+
+						// If this city was previously linked, link up previous with next
+						removeFromTour();
+
+						// Link to our neighbouring cities
+						next = city.getNext();
+						previous = city;
+
+						// Tell our neighbouring cities to link to us
+						if (city.hasNext())
+							city.next.previous = this;
+						city.next = this;
+					}
+
+				/**
+				 * Swap the tour position of this city with another (swapping locations has the same affect as swapping )
+				 * 
+				 * @param city
+				 */
+				private final void swapWith(City city)
+					{
+						// No need to swap positions of this with this
+						if (city == this)
+							return;
+
+						int tempX = x, tempY = y;
+						boolean tempSelected = selected;
+
+						x = city.x;
+						y = city.y;
+						selected = city.selected;
+
+						city.x = tempX;
+						city.y = tempY;
+						city.selected = tempSelected;
+					}
+
+				/**
+				 * Removes this city from the tour and connects its previous city to its next.
+				 */
+				private final void removeFromTour()
+					{
+						if (hasPrevious())
+							previous.next = next;
+						if (hasNext())
+							next.previous = previous;
+					}
+
+				/**
+				 * @param p
+				 *            - a point
+				 * @return - true if the point is within the cities bounds, see {@link TSP#CITY_RADIUS}.
+				 */
+				private final boolean contains(Point p)
+					{
+						return NumTools.distance(x, y, p.x, p.y) < CITY_RADIUS;
 					}
 			}
 	}

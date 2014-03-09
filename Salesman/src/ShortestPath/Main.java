@@ -1,24 +1,39 @@
 package ShortestPath;
 
+import java.io.IOException;
+
+import javax.imageio.ImageIO;
+
 import tCode.TCode;
 
 public class Main extends TCode
 	{
-		public static TSP tsp = new TSP();
-		public static Info info = new Info();
+		public static final TSP tsp = new TSP();
 
+		/**
+		 * The main method, the very first method to be called when the program is run.
+		 */
 		public static void main(String[] args)
 			{
-				new Main(800, 600, true, false);
+				new Main(true, true);
 			}
 
-		public Main(int width, int height, boolean framed, boolean resizable)
+		public Main(boolean framed, boolean resizable)
 			{
-				super(width, height, framed, resizable);
+				super(framed, resizable);
 
 				DEBUG = true;
 				FORCE_SINGLE_THREAD = true;
-				programName = "Travelling Salesman Solver";
+				programName = "Traveling Salesman solver";
+				
+				try
+					{
+						frame.addIconImage(ImageIO.read(Main.class.getResource("/assets/icon.png")));
+					}
+				catch (IOException e)
+					{
+						e.printStackTrace();
+					}
 				
 				begin(tsp);
 			}
