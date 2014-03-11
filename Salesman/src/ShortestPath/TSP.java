@@ -183,6 +183,8 @@ public class TSP extends RenderableObject
 									// g.drawLine(c.x, c.y, c.getNext().x, c.getNext().y);
 									DrawTools.drawArrow(c.x, c.y, c.getNext().x, c.getNext().y, g, 10);
 								}
+						
+						g.drawString("Improved " + (int) secondsSinceLastImprovementWithCurrentMethod + "s ago.", 5, MENU_HEIGHT + 15);
 
 						redraw = false;
 					}
