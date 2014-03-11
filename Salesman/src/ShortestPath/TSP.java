@@ -3,6 +3,7 @@ package ShortestPath;
 import java.awt.Color;
 import java.awt.Graphics2D;
 import java.awt.Point;
+import java.awt.event.ComponentEvent;
 import java.awt.event.MouseEvent;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -27,7 +28,7 @@ import tools.WindowTools;
 public class TSP extends RenderableObject
 	{
 		// Constants
-		private static final int MENU_HEIGHT = 30;
+		private static final int MENU_HEIGHT = 50;
 
 		private static final int CITY_DIAMETER = 20;
 		private static final int CITY_RADIUS = CITY_DIAMETER / 2;
@@ -44,10 +45,18 @@ public class TSP extends RenderableObject
 		private final TButton randomCityButton = new TButton("Add Random City"){ @Override public void pressed(){addCity(new City(Rand.int_(0 + CITY_RADIUS, Main.canvasWidth - CITY_RADIUS),Rand.int_(MENU_HEIGHT + CITY_RADIUS, Main.canvasHeight - CITY_RADIUS)));}};
 		private final TButton tenRandomCityButton = new TButton("Add 10 Random Cities"){ @Override public void pressed(){for (int i = 0; i < 10; i++) addCity(new City(Rand.int_(0 + CITY_RADIUS, Main.canvasWidth - CITY_RADIUS),Rand.int_(MENU_HEIGHT + CITY_RADIUS, Main.canvasHeight - CITY_RADIUS)));}};
 		private final TButton addGridButton = new TButton("Add 6 * 6 Grid"){ @Override public void pressed(){for (int x = 0; x < 6; x++) for (int y = 0; y < 6; y++) addCity(new City(50 + (x * ((Main.canvasWidth - 100)/5)),50 + MENU_HEIGHT + (y * ((Main.canvasHeight - 100 - MENU_HEIGHT)/5))));}};
-		private final TRadioButtonCollection radioButtons = new TRadioButtonCollection();
+		private final TRadioButtonCollection mouseControlRadioButtons = new TRadioButtonCollection();
 		private final TRadioButton newCityButton = new TRadioButton("New City");
 		private final TRadioButton moveCityButton = new TRadioButton("Move City");
 		private final TRadioButton removeCityButton = new TRadioButton("Remove City");
+//		private final TRadioButtonCollection mutationTypeRadioButtons = new TRadioButtonCollection();
+//		private final TRadioButton randomMutationButton = new TRadioButton("Random");
+//		private final TRadioButton swapTwoButton = new TRadioButton("Swap Two");
+//		private final TRadioButton moveEndsButton = new TRadioButton("Move Ends");
+//		private final TRadioButton randomiseOneButton = new TRadioButton("Randomise One");
+//		private final TRadioButton randomiseSomeButton = new TRadioButton("Randomise Some");
+//		private final TRadioButton reverseLoopButton = new TRadioButton("Reverse Section");
+//		private final TRadioButton moveEndButton = new TRadioButton("Move End");
 
 		// Salesman Solver Variables @formatter:on
 		private ArrayList<City> tour = new ArrayList<City>();
@@ -62,14 +71,23 @@ public class TSP extends RenderableObject
 				TCode.frame.setBounds(TCode.frame.getX() + 50, TCode.frame.getY() + 50, TCode.frame.getWidth() - 100, TCode.frame.getHeight() - 100);
 
 				// Set up the radio buttons
-				radioButtons.add(newCityButton);
-				radioButtons.add(moveCityButton);
-				radioButtons.add(removeCityButton);
+				mouseControlRadioButtons.add(newCityButton);
+				mouseControlRadioButtons.add(moveCityButton);
+				mouseControlRadioButtons.add(removeCityButton);
+
+//				mutationTypeRadioButtons.add(randomMutationButton);
+//				mutationTypeRadioButtons.add(swapTwoButton);
+//				mutationTypeRadioButtons.add(randomiseOneButton);
+//				mutationTypeRadioButtons.add(randomiseSomeButton);
+//				mutationTypeRadioButtons.add(moveEndButton);
+//				mutationTypeRadioButtons.add(moveEndsButton);
+//				mutationTypeRadioButtons.add(reverseLoopButton);
 
 				// Set up the menu
 				menu = new TMenu(0, 0, Main.canvasWidth, MENU_HEIGHT, TMenu.HORIZONTAL);
 				menu.setTComponentAlignment(TMenu.ALIGN_START);
 				menu.setBorderSize(2);
+				menu.setBackgroundColour(BACKGROUND_COLOUR);
 
 				// add the menu
 				add(menu);
@@ -78,10 +96,20 @@ public class TSP extends RenderableObject
 				menu.add(randomCityButton);
 				menu.add(tenRandomCityButton);
 				menu.add(addGridButton);
+
 				menu.add(new TLabel("Mouse controlls: "), false);
 				menu.add(newCityButton, false);
 				menu.add(moveCityButton, false);
 				menu.add(removeCityButton, false);
+
+				// menu.add(new TLabel("Mutation Type: "), false);
+				// menu.add(randomMutationButton, false);
+				// menu.add(swapTwoButton, false);
+				// menu.add(randomiseOneButton, false);
+				// menu.add(randomiseSomeButton, false);
+				// menu.add(moveEndButton, false);
+				// menu.add(moveEndsButton, false);
+				// menu.add(reverseLoopButton, false);
 			}
 
 		@Override
@@ -188,6 +216,7 @@ public class TSP extends RenderableObject
 
 				// Add the first city
 				tourCopy.add(new City(city.x, city.y));
+				tourCopy.get(0).selected = city.selected;
 				// Add each sequential City and make sure it is linked in the correct order
 				for (int i = 1; i < tour.size(); i++)
 					{
@@ -217,7 +246,9 @@ public class TSP extends RenderableObject
 		 * <li>Two cities swap their positions in the tour,</li>
 		 * <li>The start is joined to the end and a new start & end point are chosen,</li>
 		 * <li>The position of one city is randomised,</li>
-		 * <li>The position of a number of cities is randomised</li>
+		 * <li>The position of a number of cities is randomised,</li>
+		 * <li>A section of the tour is removed and the order is reversed, it is then re-attached at opposing ends (good at removing big crossover points)</li>
+		 * <li>Remove a section from the tour and add it to the start or the end,</li>
 		 * </ul>
 		 * 
 		 * @param tour
@@ -225,7 +256,11 @@ public class TSP extends RenderableObject
 		 */
 		private final void mutateTour(ArrayList<City> tour)
 			{
-				switch (Rand.int_(0, 4))
+				int mutationMethod = Rand.int_(0, 6);
+
+				// TODO add radio buttons to allow the user to choose a particular method (takes up to much space)
+
+				switch (mutationMethod)
 					{
 						case 0: // Two cities swap their positions in the tour
 							tour.get(Rand.int_(0, tour.size())).swapWith(tour.get(Rand.int_(0, tour.size())));
@@ -233,15 +268,10 @@ public class TSP extends RenderableObject
 
 						case 1: // The start is joined to the end, new start & end points are chosen
 							// Find the old ends
-							City oldStart = null,
-							oldEnd = null,
+							City oldStart = tour.get(0),
+							oldEnd = tour.get(tour.size() - 1),
 							newStart = null;
-							for (City c : tour)
-								if (!c.hasPrevious())
-									oldStart = c;
-							for (City c : tour)
-								if (!c.hasNext())
-									oldEnd = c;
+
 							// Join the tour in a loop
 							oldEnd.next = oldStart;
 							oldStart.previous = oldEnd;
@@ -268,12 +298,63 @@ public class TSP extends RenderableObject
 								tour.get(Rand.int_(0, tour.size())).insertAfter(tour.get(Rand.int_(0, tour.size())));
 							break;
 
-						case 3:
+						case 3: // The position of a number of cities is randomised
 							for (int i = Rand.int_(0, tour.size()); i > 0; i--)
 								if (Rand.bool())
 									tour.get(Rand.int_(0, tour.size())).insertBefore(tour.get(Rand.int_(0, tour.size())));
 								else
 									tour.get(Rand.int_(0, tour.size())).insertAfter(tour.get(Rand.int_(0, tour.size())));
+							break;
+
+						case 4: // A section of the tour is removed and the order is reversed, it is then re-attached at opposing ends
+							if (tour.size() < 5) // Too short to work
+								return;
+
+							int loopSize = Rand.int_(4, tour.size() - 1),
+							loopStart = Rand.int_(0, tour.size() - loopSize);
+							City startingCity = null,
+							endingCity = null;
+
+							// Set the start of the loop
+							startingCity = tour.get(0);
+							for (int i = 0; i < loopStart; i++)
+								startingCity = startingCity.getNext();
+							// Set the end of the loop
+							endingCity = startingCity;
+							for (int i = 0; i < loopSize; i++)
+								endingCity = endingCity.getNext();
+
+							// Swap the cities sequentially from closest to the loop ends to the farthest
+							for (int i = 0; i < (loopSize - 2) / 2; i++)
+								{
+									startingCity = startingCity.next;
+									endingCity = endingCity.previous;
+									startingCity.swapWith(endingCity);
+								}
+
+							break;
+
+						case 5: // Remove a section from the tour and add it to the start or the end
+							int sectionSize = Rand.int_(2, tour.size() - 2),
+							sectionStart = Rand.int_(0, tour.size() - sectionSize);
+							City temp = tour.get(0);
+
+							for (int i = 0; i < sectionStart; i++)
+								temp = temp.getNext();
+
+							if (Rand.bool())
+								// insert at start
+								for (int i = 0; i < sectionSize; i++)
+									temp.getNext().insertBefore(tour.get(0));
+							else
+								// insert at end
+								for (int i = 0; i < sectionSize; i++)
+									temp.getNext().insertAfter(tour.get(tour.size() - 1));
+
+							break;
+
+						default:
+							System.out.println("Unrecognised Mutation Method");
 							break;
 					}
 			}
@@ -359,6 +440,32 @@ public class TSP extends RenderableObject
 									}
 							}
 					}
+				// Remove any cities under the mouse point
+				else if (removeCityButton.isChecked())
+					{
+						for (int i = 0; i < tour.size(); i++)
+							if (tour.get(i).contains(e.getPoint()))
+								{
+									tour.get(i).removeFromTour();
+									tour.remove(i);
+									i--;
+									redraw = true;
+								}
+					}
+			}
+
+		@Override
+		public final void componentResized(ComponentEvent e)
+			{
+				redraw = true;
+				menu.setWidth(Main.canvasWidth);
+				for (int i = 0 ; i < tour.size();i++)
+					if (tour.get(i).x < 0 || tour.get(i).x > Main.canvasWidth || tour.get(i).y < MENU_HEIGHT || tour.get(i).y > Main.canvasHeight)
+						{
+							tour.get(i).removeFromTour();
+							tour.remove(i);
+							i--;
+						}
 			}
 
 		/**
