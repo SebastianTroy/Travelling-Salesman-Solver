@@ -22,7 +22,6 @@ public class Main extends TCode
 			{
 				super(framed, resizable);
 
-				DEBUG = true;
 				FORCE_SINGLE_THREAD = true;
 				programName = "Traveling Salesman solver";
 				

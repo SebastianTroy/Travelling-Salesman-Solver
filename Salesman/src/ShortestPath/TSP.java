@@ -11,6 +11,7 @@ import java.util.Collection;
 import tCode.RenderableObject;
 import tCode.TCode;
 import tComponents.components.TButton;
+import tComponents.components.TCheckBox;
 import tComponents.components.TLabel;
 import tComponents.components.TMenu;
 import tComponents.components.TRadioButton;
@@ -38,6 +39,12 @@ public class TSP extends RenderableObject
 		private static final Color ROUTE_COLOUR = Color.WHITE;
 		private static final Color SELECTED_COLOUR = Color.YELLOW;
 
+		// Types of mutation
+		private enum MutationType
+			{
+				SWAP_TWO, RANDOMISE_ONE, RANDOMISE_SOME, REVERSE_SECTION, MOVE_ONE_END, MOVE_BOTH_ENDS
+			}
+
 		// Menu variables @formatter:off
 		private TMenu menu;
 		private final TButton clearButton = new TButton("Remove All Cities"){ @Override public void pressed(){tour.clear(); redraw = true;}};
@@ -49,17 +56,16 @@ public class TSP extends RenderableObject
 		private final TRadioButton newCityButton = new TRadioButton("New City");
 		private final TRadioButton moveCityButton = new TRadioButton("Move City");
 		private final TRadioButton removeCityButton = new TRadioButton("Remove City");
-//		private final TRadioButtonCollection mutationTypeRadioButtons = new TRadioButtonCollection();
-//		private final TRadioButton randomMutationButton = new TRadioButton("Random");
-//		private final TRadioButton swapTwoButton = new TRadioButton("Swap Two");
-//		private final TRadioButton moveEndsButton = new TRadioButton("Move Ends");
-//		private final TRadioButton randomiseOneButton = new TRadioButton("Randomise One");
-//		private final TRadioButton randomiseSomeButton = new TRadioButton("Randomise Some");
-//		private final TRadioButton reverseLoopButton = new TRadioButton("Reverse Section");
-//		private final TRadioButton moveEndButton = new TRadioButton("Move End");
+		private final TLabel currentMethodLabel = new TLabel("Swap cities");
+		private final TCheckBox autoMutateCheckbox = new TCheckBox("Automatic?"){ @Override public final void pressed(){automutate = isChecked();}};
+		private final TButton nextMutationMethodButton = new TButton("Next Method"){ @Override public final void pressed(){incrementMutationType();}};
+
 
 		// Salesman Solver Variables @formatter:on
 		private ArrayList<City> tour = new ArrayList<City>();
+		private MutationType currentType = MutationType.SWAP_TWO;
+		private boolean automutate = true;
+		private double secondsSinceLastImprovementWithCurrentMethod = 0;
 
 		// Only set to true if the tour has changed
 		private boolean redraw = true;
@@ -75,13 +81,11 @@ public class TSP extends RenderableObject
 				mouseControlRadioButtons.add(moveCityButton);
 				mouseControlRadioButtons.add(removeCityButton);
 
-//				mutationTypeRadioButtons.add(randomMutationButton);
-//				mutationTypeRadioButtons.add(swapTwoButton);
-//				mutationTypeRadioButtons.add(randomiseOneButton);
-//				mutationTypeRadioButtons.add(randomiseSomeButton);
-//				mutationTypeRadioButtons.add(moveEndButton);
-//				mutationTypeRadioButtons.add(moveEndsButton);
-//				mutationTypeRadioButtons.add(reverseLoopButton);
+				// Prepare
+				currentMethodLabel.setFontSize(15);
+				currentMethodLabel.setBackgroundColour(BACKGROUND_COLOUR);
+				currentMethodLabel.setTextColour(ROUTE_COLOUR);
+				autoMutateCheckbox.setChecked(automutate);
 
 				// Set up the menu
 				menu = new TMenu(0, 0, Main.canvasWidth, MENU_HEIGHT, TMenu.HORIZONTAL);
@@ -97,19 +101,13 @@ public class TSP extends RenderableObject
 				menu.add(tenRandomCityButton);
 				menu.add(addGridButton);
 
-				menu.add(new TLabel("Mouse controlls: "), false);
 				menu.add(newCityButton, false);
 				menu.add(moveCityButton, false);
 				menu.add(removeCityButton, false);
 
-				// menu.add(new TLabel("Mutation Type: "), false);
-				// menu.add(randomMutationButton, false);
-				// menu.add(swapTwoButton, false);
-				// menu.add(randomiseOneButton, false);
-				// menu.add(randomiseSomeButton, false);
-				// menu.add(moveEndButton, false);
-				// menu.add(moveEndsButton, false);
-				// menu.add(reverseLoopButton, false);
+				menu.add(autoMutateCheckbox, false);
+				menu.add(nextMutationMethodButton, false);
+				menu.add(currentMethodLabel, false);
 			}
 
 		@Override
@@ -118,20 +116,39 @@ public class TSP extends RenderableObject
 				// < 3 cities cannot be improved as only one tour is possible
 				if (tour.size() > 2)
 					{
+						// increase the time elapsed since the last improvement
+						secondsSinceLastImprovementWithCurrentMethod += secondsPassed;
+
 						// Copy and mutate the tour
 						ArrayList<City> tourCopy = getTourCopy();
 						mutateTour(tourCopy);
 
+						// Calculate how much better the new tour is
+						double distanceImproved = calculateTourLength(tour) - calculateTourLength(tourCopy);
+
 						// If the mutant tour is better, keep it
-						if (calculateTourLength(tour) >= calculateTourLength(tourCopy))
+						if (distanceImproved >= 0)
 							{
 								// clear the old tour
 								tour.clear();
 								// add the new tour
 								for (City c : tourCopy)
 									tour.add(c);
+
+								// reset the time elapsed since the last improvement
+								if (distanceImproved > 0)
+									secondsSinceLastImprovementWithCurrentMethod = 0;
+
 								// draw the new tour
 								redraw = true;
+							}
+						else if (automutate)// check to see how long since the last improvement and adapt strategy if necessary.
+							{
+								if (secondsSinceLastImprovementWithCurrentMethod > 2)
+									{
+										incrementMutationType();
+										secondsSinceLastImprovementWithCurrentMethod = 0;
+									}
 							}
 					}
 			}
@@ -241,6 +258,47 @@ public class TSP extends RenderableObject
 			}
 
 		/**
+		 * Detects the current type of mutation and switches it to the next in the list
+		 */
+		private final void incrementMutationType()
+			{
+				switch (currentType)
+					{
+						case SWAP_TWO:
+							currentType = MutationType.MOVE_BOTH_ENDS;
+							currentMethodLabel.setLabelText("Move tour ends");
+							break;
+
+						case MOVE_BOTH_ENDS:
+							currentType = MutationType.RANDOMISE_ONE;
+							currentMethodLabel.setLabelText("Randomise city position");
+							break;
+
+						case RANDOMISE_ONE:
+							currentType = MutationType.RANDOMISE_SOME;
+							currentMethodLabel.setLabelText("Randomise city positions");
+							break;
+
+						case RANDOMISE_SOME:
+							currentType = MutationType.REVERSE_SECTION;
+							currentMethodLabel.setLabelText("Reverse direction of tour section");
+							break;
+
+						case REVERSE_SECTION:
+							currentType = MutationType.MOVE_ONE_END;
+							currentMethodLabel.setLabelText("Move one end of tour");
+							break;
+
+						case MOVE_ONE_END:
+							currentType = MutationType.SWAP_TWO; // and back to the start
+							currentMethodLabel.setLabelText("Swap two cities");
+							break;
+					}
+				/* We have resized a menu item and currently the menu will not be notified automatically so this causes the menu to adjust itself */
+				menu.setWidth(menu.getWidthD());
+			}
+
+		/**
 		 * Mutates the tour in one of the following ways:
 		 * <ul>
 		 * <li>Two cities swap their positions in the tour,</li>
@@ -256,17 +314,13 @@ public class TSP extends RenderableObject
 		 */
 		private final void mutateTour(ArrayList<City> tour)
 			{
-				int mutationMethod = Rand.int_(0, 6);
-
-				// TODO add radio buttons to allow the user to choose a particular method (takes up to much space)
-
-				switch (mutationMethod)
+				switch (currentType)
 					{
-						case 0: // Two cities swap their positions in the tour
+						case SWAP_TWO: // Two cities swap their positions in the tour
 							tour.get(Rand.int_(0, tour.size())).swapWith(tour.get(Rand.int_(0, tour.size())));
 							break;
 
-						case 1: // The start is joined to the end, new start & end points are chosen
+						case MOVE_BOTH_ENDS: // The start is joined to the end, new start & end points are chosen
 							// Find the old ends
 							City oldStart = tour.get(0),
 							oldEnd = tour.get(tour.size() - 1),
@@ -276,7 +330,7 @@ public class TSP extends RenderableObject
 							oldEnd.next = oldStart;
 							oldStart.previous = oldEnd;
 
-							// Find a connection and break it
+							// Find a random connection and break it
 							boolean connectionBroken = false;
 							do
 								{
@@ -291,14 +345,14 @@ public class TSP extends RenderableObject
 							while (!connectionBroken);
 							break;
 
-						case 2: // The position of one city is randomised
+						case RANDOMISE_ONE: // The position of one city is randomised
 							if (Rand.bool())
 								tour.get(Rand.int_(0, tour.size())).insertBefore(tour.get(Rand.int_(0, tour.size())));
 							else
 								tour.get(Rand.int_(0, tour.size())).insertAfter(tour.get(Rand.int_(0, tour.size())));
 							break;
 
-						case 3: // The position of a number of cities is randomised
+						case RANDOMISE_SOME: // The position of a number of cities is randomised
 							for (int i = Rand.int_(0, tour.size()); i > 0; i--)
 								if (Rand.bool())
 									tour.get(Rand.int_(0, tour.size())).insertBefore(tour.get(Rand.int_(0, tour.size())));
@@ -306,7 +360,7 @@ public class TSP extends RenderableObject
 									tour.get(Rand.int_(0, tour.size())).insertAfter(tour.get(Rand.int_(0, tour.size())));
 							break;
 
-						case 4: // A section of the tour is removed and the order is reversed, it is then re-attached at opposing ends
+						case REVERSE_SECTION: // A section of the tour is removed and the order is reversed, it is then re-attached at opposing ends
 							if (tour.size() < 5) // Too short to work
 								return;
 
@@ -334,7 +388,7 @@ public class TSP extends RenderableObject
 
 							break;
 
-						case 5: // Remove a section from the tour and add it to the start or the end
+						case MOVE_ONE_END: // Remove a section from the tour and add it to the start or the end
 							int sectionSize = Rand.int_(2, tour.size() - 2),
 							sectionStart = Rand.int_(0, tour.size() - sectionSize);
 							City temp = tour.get(0);
@@ -459,7 +513,7 @@ public class TSP extends RenderableObject
 			{
 				redraw = true;
 				menu.setWidth(Main.canvasWidth);
-				for (int i = 0 ; i < tour.size();i++)
+				for (int i = 0; i < tour.size(); i++)
 					if (tour.get(i).x < 0 || tour.get(i).x > Main.canvasWidth || tour.get(i).y < MENU_HEIGHT || tour.get(i).y > Main.canvasHeight)
 						{
 							tour.get(i).removeFromTour();
