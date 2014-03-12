@@ -57,6 +57,7 @@ public class TSP extends RenderableObject
 		private final TRadioButton moveCityButton = new TRadioButton("Move City");
 		private final TRadioButton removeCityButton = new TRadioButton("Remove City");
 		private final TLabel currentMethodLabel = new TLabel("Swap cities");
+		private final TCheckBox playPauseCheckbox = new TCheckBox("Pause"){ @Override public final void pressed(){paused = isChecked();}};
 		private final TCheckBox autoMutateCheckbox = new TCheckBox("Automatic?"){ @Override public final void pressed(){automutate = isChecked();}};
 		private final TButton nextMutationMethodButton = new TButton("Next Method"){ @Override public final void pressed(){incrementMutationType();}};
 
@@ -64,8 +65,9 @@ public class TSP extends RenderableObject
 		// Salesman Solver Variables @formatter:on
 		private ArrayList<City> tour = new ArrayList<City>();
 		private MutationType currentType = MutationType.SWAP_TWO;
-		private boolean automutate = true;
-		private double secondsSinceLastImprovementWithCurrentMethod = 0;
+		private boolean automutate = true, paused = false;
+		private double timeTillNextMethod = 2;
+		private double timeSincelastImprovement = 0;
 
 		// Only set to true if the tour has changed
 		private boolean redraw = true;
@@ -105,6 +107,8 @@ public class TSP extends RenderableObject
 				menu.add(moveCityButton, false);
 				menu.add(removeCityButton, false);
 
+				menu.add(playPauseCheckbox, false);
+
 				menu.add(autoMutateCheckbox, false);
 				menu.add(nextMutationMethodButton, false);
 				menu.add(currentMethodLabel, false);
@@ -114,10 +118,11 @@ public class TSP extends RenderableObject
 		public final void tick(double secondsPassed)
 			{
 				// < 3 cities cannot be improved as only one tour is possible
-				if (tour.size() > 2)
+				if (!paused && tour.size() > 2)
 					{
 						// increase the time elapsed since the last improvement
-						secondsSinceLastImprovementWithCurrentMethod += secondsPassed;
+						timeTillNextMethod -= secondsPassed;
+						timeSincelastImprovement += secondsPassed;
 
 						// Copy and mutate the tour
 						ArrayList<City> tourCopy = getTourCopy();
@@ -137,17 +142,20 @@ public class TSP extends RenderableObject
 
 								// reset the time elapsed since the last improvement
 								if (distanceImproved > 0)
-									secondsSinceLastImprovementWithCurrentMethod = 0;
+									{
+										timeSincelastImprovement = 0;
+										timeTillNextMethod = 2;
+									}
 
 								// draw the new tour
 								redraw = true;
 							}
 						else if (automutate)// check to see how long since the last improvement and adapt strategy if necessary.
 							{
-								if (secondsSinceLastImprovementWithCurrentMethod > 2)
+								if (timeTillNextMethod < 0)
 									{
 										incrementMutationType();
-										secondsSinceLastImprovementWithCurrentMethod = 0;
+										timeTillNextMethod = 2;
 									}
 							}
 					}
@@ -183,11 +191,13 @@ public class TSP extends RenderableObject
 									// g.drawLine(c.x, c.y, c.getNext().x, c.getNext().y);
 									DrawTools.drawArrow(c.x, c.y, c.getNext().x, c.getNext().y, g, 10);
 								}
-						
-						g.drawString("Improved " + (int) secondsSinceLastImprovementWithCurrentMethod + "s ago.", 5, MENU_HEIGHT + 15);
-
 						redraw = false;
 					}
+				g.setColor(BACKGROUND_COLOUR);
+				g.fillRect(0, MENU_HEIGHT, 300, 15);
+
+				g.setColor(ROUTE_COLOUR);
+				g.drawString("Improved " + (int) timeSincelastImprovement + "s ago.", 5, MENU_HEIGHT + 15);
 			}
 
 		/**
@@ -381,7 +391,7 @@ public class TSP extends RenderableObject
 								endingCity = endingCity.getNext();
 
 							// Swap the cities sequentially from closest to the loop ends to the farthest
-							for (int i = 0; i < (loopSize - 2) / 2; i++)
+							for (int i = 0; i <= (loopSize - 2) / 2; i++)
 								{
 									startingCity = startingCity.next;
 									endingCity = endingCity.previous;
