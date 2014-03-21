@@ -64,7 +64,7 @@ public class TSP extends RenderableObject
 		// Salesman Solver Variables @formatter:on
 		private ArrayList<City> tour = new ArrayList<City>();
 		private MutationType currentType = MutationType.SWAP_TWO;
-		private double timeTillNextMethod = 2;
+		private int generationsSinceLastMutationType = 0;
 		private double timeSincelastImprovement = 0;
 
 		// Only set to true if the tour has changed
@@ -119,7 +119,7 @@ public class TSP extends RenderableObject
 				if (!playPauseCheckbox.isChecked() && tour.size() > 2)
 					{
 						// increase the time elapsed since the last improvement
-						timeTillNextMethod -= secondsPassed;
+						generationsSinceLastMutationType++;
 						timeSincelastImprovement += secondsPassed;
 
 						// Copy and mutate the tour
@@ -140,20 +140,17 @@ public class TSP extends RenderableObject
 
 								// reset the time elapsed since the last improvement
 								if (distanceImproved > 0)
-									{
 										timeSincelastImprovement = 0;
-										timeTillNextMethod = 2;
-									}
 
 								// draw the new tour
 								redraw = true;
 							}
 						else if (autoMutateCheckbox.isChecked())// check to see how long since the last improvement and adapt strategy if necessary.
 							{
-								if (timeTillNextMethod < 0)
+								if (generationsSinceLastMutationType > 2000)
 									{
 										incrementMutationType();
-										timeTillNextMethod = 2;
+										generationsSinceLastMutationType = 0;
 									}
 							}
 					}

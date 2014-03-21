@@ -23,7 +23,11 @@ public class Main extends TCode
 				super(framed, resizable);
 
 				FORCE_SINGLE_THREAD = true;
+				
+				versionNumber = "2.0";
 				programName = "Traveling Salesman solver";
+				
+				frame.simplifyTitle(true);
 				
 				try
 					{
