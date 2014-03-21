@@ -6,7 +6,6 @@ import java.awt.Point;
 import java.awt.event.ComponentEvent;
 import java.awt.event.MouseEvent;
 import java.util.ArrayList;
-import java.util.Collection;
 
 import tCode.RenderableObject;
 import tCode.TCode;
@@ -42,7 +41,7 @@ public class TSP extends RenderableObject
 		// Types of mutation
 		private enum MutationType
 			{
-				SWAP_TWO, RANDOMISE_ONE, RANDOMISE_SOME, REVERSE_SECTION, MOVE_ONE_END, MOVE_BOTH_ENDS
+				SWAP_TWO, RANDOMISE_ONE, RANDOMISE_SOME, REVERSE_SECTION, MOVE_ONE_END;//, MOVE_BOTH_ENDS
 			}
 
 		// Menu variables @formatter:off
@@ -57,15 +56,14 @@ public class TSP extends RenderableObject
 		private final TRadioButton moveCityButton = new TRadioButton("Move City");
 		private final TRadioButton removeCityButton = new TRadioButton("Remove City");
 		private final TLabel currentMethodLabel = new TLabel("Swap cities");
-		private final TCheckBox playPauseCheckbox = new TCheckBox("Pause"){ @Override public final void pressed(){paused = isChecked();}};
-		private final TCheckBox autoMutateCheckbox = new TCheckBox("Automatic?"){ @Override public final void pressed(){automutate = isChecked();}};
+		private final TCheckBox playPauseCheckbox = new TCheckBox("Pause");
+		private final TCheckBox autoMutateCheckbox = new TCheckBox("Automatic?");
 		private final TButton nextMutationMethodButton = new TButton("Next Method"){ @Override public final void pressed(){incrementMutationType();}};
 
 
 		// Salesman Solver Variables @formatter:on
 		private ArrayList<City> tour = new ArrayList<City>();
 		private MutationType currentType = MutationType.SWAP_TWO;
-		private boolean automutate = true, paused = false;
 		private double timeTillNextMethod = 2;
 		private double timeSincelastImprovement = 0;
 
@@ -87,7 +85,7 @@ public class TSP extends RenderableObject
 				currentMethodLabel.setFontSize(15);
 				currentMethodLabel.setBackgroundColour(BACKGROUND_COLOUR);
 				currentMethodLabel.setTextColour(ROUTE_COLOUR);
-				autoMutateCheckbox.setChecked(automutate);
+				autoMutateCheckbox.setChecked(true);
 
 				// Set up the menu
 				menu = new TMenu(0, 0, Main.canvasWidth, MENU_HEIGHT, TMenu.HORIZONTAL);
@@ -118,7 +116,7 @@ public class TSP extends RenderableObject
 		public final void tick(double secondsPassed)
 			{
 				// < 3 cities cannot be improved as only one tour is possible
-				if (!paused && tour.size() > 2)
+				if (!playPauseCheckbox.isChecked() && tour.size() > 2)
 					{
 						// increase the time elapsed since the last improvement
 						timeTillNextMethod -= secondsPassed;
@@ -150,7 +148,7 @@ public class TSP extends RenderableObject
 								// draw the new tour
 								redraw = true;
 							}
-						else if (automutate)// check to see how long since the last improvement and adapt strategy if necessary.
+						else if (autoMutateCheckbox.isChecked())// check to see how long since the last improvement and adapt strategy if necessary.
 							{
 								if (timeTillNextMethod < 0)
 									{
@@ -187,10 +185,9 @@ public class TSP extends RenderableObject
 						g.setColor(ROUTE_COLOUR);
 						for (City c : tour)
 							if (c.hasNext())
-								{
-									// g.drawLine(c.x, c.y, c.getNext().x, c.getNext().y);
-									DrawTools.drawArrow(c.x, c.y, c.getNext().x, c.getNext().y, g, 10);
-								}
+								// g.drawLine(c.x, c.y, c.getNext().x, c.getNext().y);
+								DrawTools.drawArrow(c.x, c.y, c.getNext().x, c.getNext().y, g, 10);
+
 						redraw = false;
 					}
 				g.setColor(BACKGROUND_COLOUR);
@@ -277,14 +274,14 @@ public class TSP extends RenderableObject
 				switch (currentType)
 					{
 						case SWAP_TWO:
-							currentType = MutationType.MOVE_BOTH_ENDS;
-							currentMethodLabel.setLabelText("Move tour ends");
+							currentType = MutationType.RANDOMISE_ONE;// MOVE_BOTH_ENDS;
+							currentMethodLabel.setLabelText("Randomise city position");//"Move tour ends");
 							break;
 
-						case MOVE_BOTH_ENDS:
-							currentType = MutationType.RANDOMISE_ONE;
-							currentMethodLabel.setLabelText("Randomise city position");
-							break;
+						// case MOVE_BOTH_ENDS:
+						// currentType = MutationType.RANDOMISE_ONE;
+						// currentMethodLabel.setLabelText("Randomise city position");
+						// break;
 
 						case RANDOMISE_ONE:
 							currentType = MutationType.RANDOMISE_SOME;
@@ -332,30 +329,30 @@ public class TSP extends RenderableObject
 							tour.get(Rand.int_(0, tour.size())).swapWith(tour.get(Rand.int_(0, tour.size())));
 							break;
 
-						case MOVE_BOTH_ENDS: // The start is joined to the end, new start & end points are chosen
-							// Find the old ends
-							City oldStart = tour.get(0),
-							oldEnd = tour.get(tour.size() - 1),
-							newStart = null;
-
-							// Join the tour in a loop
-							oldEnd.next = oldStart;
-							oldStart.previous = oldEnd;
-
-							// Find a random connection and break it
-							boolean connectionBroken = false;
-							do
-								{
-									newStart = tour.get(Rand.int_(0, tour.size()));
-									if (newStart.hasPrevious())
-										{
-											newStart.getPrevious().next = null;
-											newStart.previous = null;
-											connectionBroken = true;
-										}
-								}
-							while (!connectionBroken);
-							break;
+						// case MOVE_BOTH_ENDS: // The start is joined to the end, new start & end points are chosen
+						// // Find the old ends
+						// City oldStart = tour.get(0),
+						// oldEnd = tour.get(tour.size() - 1),
+						// newStart = null;
+						//
+						// // Join the tour in a loop
+						// oldEnd.next = oldStart;
+						// oldStart.previous = oldEnd;
+						//
+						// // Find a random connection and break it
+						// boolean connectionBroken = false;
+						// do
+						// {
+						// newStart = tour.get(Rand.int_(0, tour.size()));
+						// if (newStart.hasPrevious())
+						// {
+						// newStart.getPrevious().next = null;
+						// newStart.previous = null;
+						// connectionBroken = true;
+						// }
+						// }
+						// while (!connectionBroken);
+						// break;
 
 						case RANDOMISE_ONE: // The position of one city is randomised
 							if (Rand.bool())
@@ -430,13 +427,14 @@ public class TSP extends RenderableObject
 		 *            - This tour to be calculated
 		 * @return - The length of the tour provided
 		 */
-		private final double calculateTourLength(Collection<City> tour)
+		private final double calculateTourLength(ArrayList<City> tour)
 			{
 				double distance = 0;
 				// We don't even need to go through the tour from start to end
 				for (City c : tour)
 					if (c.hasNext())
 						distance += NumTools.distance(c.x, c.y, c.next.x, c.next.y);
+
 				return distance;
 			}
 
@@ -629,7 +627,7 @@ public class TSP extends RenderableObject
 				/**
 				 * Returns false if this is the first city in the tour
 				 * 
-				 * @return - true if the next city in the tour == null
+				 * @return - true if there is a previous city in the tour
 				 */
 				private final boolean hasPrevious()
 					{
@@ -639,7 +637,7 @@ public class TSP extends RenderableObject
 				/**
 				 * Returns false if this is the last city in the tour
 				 * 
-				 * @return - false if the next city in the tour == null
+				 * @return - true if there is a next city in the tour
 				 */
 				private final boolean hasNext()
 					{
