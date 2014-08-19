@@ -41,16 +41,16 @@ public class TSP extends RenderableObject
 		// Types of mutation
 		private enum MutationType
 			{
-				SWAP_TWO, RANDOMISE_ONE, RANDOMISE_SOME, REVERSE_SECTION, MOVE_ONE_END;//, MOVE_BOTH_ENDS
+				SWAP_TWO, RANDOMISE_ONE, RANDOMISE_SOME, REVERSE_SECTION, MOVE_ONE_END;// , MOVE_BOTH_ENDS
 			}
 
 		// Menu variables @formatter:off
 		private TMenu menu;
-		private final TButton clearButton = new TButton("Remove All Cities"){ @Override public void pressed(){tour.clear(); redraw = true;}};
-		private final TButton resetButton = new TButton("Reset Solution"){ @Override public void pressed(){shuffleCities();}};
-		private final TButton randomCityButton = new TButton("Add Random City"){ @Override public void pressed(){addCity(new City(Rand.int_(0 + CITY_RADIUS, Main.canvasWidth - CITY_RADIUS),Rand.int_(MENU_HEIGHT + CITY_RADIUS, Main.canvasHeight - CITY_RADIUS)));}};
-		private final TButton tenRandomCityButton = new TButton("Add 10 Random Cities"){ @Override public void pressed(){for (int i = 0; i < 10; i++) addCity(new City(Rand.int_(0 + CITY_RADIUS, Main.canvasWidth - CITY_RADIUS),Rand.int_(MENU_HEIGHT + CITY_RADIUS, Main.canvasHeight - CITY_RADIUS)));}};
-		private final TButton addGridButton = new TButton("Add 6 * 6 Grid"){ @Override public void pressed(){for (int x = 0; x < 6; x++) for (int y = 0; y < 6; y++) addCity(new City(50 + (x * ((Main.canvasWidth - 100)/5)),50 + MENU_HEIGHT + (y * ((Main.canvasHeight - 100 - MENU_HEIGHT)/5))));}};
+		private final TButton clearButton = new TButton("Remove All Cities"){ @Override public void pressed(){tour.clear(); redraw = true;numGenerations = imrovements = 0;}};
+		private final TButton resetButton = new TButton("Reset Solution"){ @Override public void pressed(){shuffleCities();numGenerations = imrovements = 0;}};
+		private final TButton randomCityButton = new TButton("Add Random City"){ @Override public void pressed(){addCity(new City(Rand.int_(0 + CITY_RADIUS, Main.canvasWidth - CITY_RADIUS),Rand.int_(MENU_HEIGHT + CITY_RADIUS, Main.canvasHeight - CITY_RADIUS)));numGenerations = imrovements = 0;}};
+		private final TButton tenRandomCityButton = new TButton("Add 10 Random Cities"){ @Override public void pressed(){for (int i = 0; i < 10; i++) addCity(new City(Rand.int_(0 + CITY_RADIUS, Main.canvasWidth - CITY_RADIUS),Rand.int_(MENU_HEIGHT + CITY_RADIUS, Main.canvasHeight - CITY_RADIUS)));numGenerations = imrovements = 0;}};
+		private final TButton addGridButton = new TButton("Add 6 * 6 Grid"){ @Override public void pressed(){for (int x = 0; x < 6; x++) for (int y = 0; y < 6; y++) addCity(new City(50 + (x * ((Main.canvasWidth - 100)/5)),50 + MENU_HEIGHT + (y * ((Main.canvasHeight - 100 - MENU_HEIGHT)/5))));numGenerations = imrovements = 0;}};
 		private final TRadioButtonCollection mouseControlRadioButtons = new TRadioButtonCollection();
 		private final TRadioButton newCityButton = new TRadioButton("New City");
 		private final TRadioButton moveCityButton = new TRadioButton("Move City");
@@ -60,10 +60,10 @@ public class TSP extends RenderableObject
 		private final TCheckBox autoMutateCheckbox = new TCheckBox("Automatic?");
 		private final TButton nextMutationMethodButton = new TButton("Next Method"){ @Override public final void pressed(){incrementMutationType();}};
 
-
 		// Salesman Solver Variables @formatter:on
 		private ArrayList<City> tour = new ArrayList<City>();
 		private MutationType currentType = MutationType.SWAP_TWO;
+		private long numGenerations = 0, imrovements = 0;
 		private int generationsSinceLastMutationType = 0;
 		private double timeSincelastImprovement = 0;
 
@@ -119,6 +119,7 @@ public class TSP extends RenderableObject
 				if (!playPauseCheckbox.isChecked() && tour.size() > 2)
 					{
 						// increase the time elapsed since the last improvement
+						numGenerations++;
 						generationsSinceLastMutationType++;
 						timeSincelastImprovement += secondsPassed;
 
@@ -130,20 +131,24 @@ public class TSP extends RenderableObject
 						double distanceImproved = calculateTourLength(tour) - calculateTourLength(tourCopy);
 
 						// If the mutant tour is better, keep it
-						if (distanceImproved >= 0)
+						if (distanceImproved > 0)
 							{
-								// clear the old tour
-								tour.clear();
-								// add the new tour
-								for (City c : tourCopy)
-									tour.add(c);
+								imrovements++;
+								if (distanceImproved >= 0)
+									{
+										// clear the old tour
+										tour.clear();
+										// add the new tour
+										for (City c : tourCopy)
+											tour.add(c);
 
-								// reset the time elapsed since the last improvement
-								if (distanceImproved > 0)
-										timeSincelastImprovement = 0;
+										// reset the time elapsed since the last improvement
+										if (distanceImproved > 0)
+											timeSincelastImprovement = 0;
 
-								// draw the new tour
-								redraw = true;
+										// draw the new tour
+										redraw = true;
+									}
 							}
 						else if (autoMutateCheckbox.isChecked())// check to see how long since the last improvement and adapt strategy if necessary.
 							{
@@ -188,10 +193,12 @@ public class TSP extends RenderableObject
 						redraw = false;
 					}
 				g.setColor(BACKGROUND_COLOUR);
-				g.fillRect(0, MENU_HEIGHT, 300, 15);
+				g.fillRect(0, MENU_HEIGHT, 500, 15);
 
 				g.setColor(ROUTE_COLOUR);
 				g.drawString("Improved " + (int) timeSincelastImprovement + "s ago.", 5, MENU_HEIGHT + 15);
+				g.drawString("Generations: " + numGenerations, 155, MENU_HEIGHT + 15);
+				g.drawString("Improvements: " + imrovements, 305, MENU_HEIGHT + 15);
 			}
 
 		/**
@@ -272,7 +279,7 @@ public class TSP extends RenderableObject
 					{
 						case SWAP_TWO:
 							currentType = MutationType.RANDOMISE_ONE;// MOVE_BOTH_ENDS;
-							currentMethodLabel.setLabelText("Randomise city position");//"Move tour ends");
+							currentMethodLabel.setLabelText("Randomise city position");// "Move tour ends");
 							break;
 
 						// case MOVE_BOTH_ENDS:
@@ -444,6 +451,7 @@ public class TSP extends RenderableObject
 				if (newCityButton.isChecked() && !(p.x < 0 || p.x > Main.canvasWidth || p.y < MENU_HEIGHT || p.y > Main.canvasHeight))
 					{
 						addCity(new City(p.x, p.y));
+						numGenerations = imrovements = 0;
 					}
 				// Select A single city under the mouse point
 				else if (moveCityButton.isChecked())
@@ -469,6 +477,7 @@ public class TSP extends RenderableObject
 									tour.remove(i);
 									i--;
 									redraw = true;
+									numGenerations = imrovements = 0;
 								}
 					}
 			}
@@ -483,6 +492,7 @@ public class TSP extends RenderableObject
 							{
 								if (tour.get(i).selected == true)
 									{
+										numGenerations = imrovements = 0;
 										if (e.getX() < 0 || e.getX() > Main.canvasWidth || e.getY() < MENU_HEIGHT || e.getY() > Main.canvasHeight)
 											{
 												tour.get(i).removeFromTour();
@@ -526,6 +536,7 @@ public class TSP extends RenderableObject
 							tour.get(i).removeFromTour();
 							tour.remove(i);
 							i--;
+							numGenerations = imrovements = 0;
 						}
 			}
 
