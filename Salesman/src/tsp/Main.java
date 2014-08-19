@@ -31,7 +31,7 @@ public class Main extends TCode
 				
 				try
 					{
-						frame.addIconImage(ImageIO.read(Main.class.getResource("/icon.png")));
+						frame.addIconImage(ImageIO.read(Main.class.getResource("icon.png")));
 					}
 				catch (IOException e)
 					{
