@@ -1,4 +1,4 @@
-package ShortestPath;
+package tsp;
 
 import java.awt.Color;
 import java.awt.Graphics2D;

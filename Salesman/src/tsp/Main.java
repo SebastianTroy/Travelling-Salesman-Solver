@@ -1,4 +1,4 @@
-package ShortestPath;
+package tsp;
 
 import java.io.IOException;
 
@@ -31,7 +31,7 @@ public class Main extends TCode
 				
 				try
 					{
-						frame.addIconImage(ImageIO.read(Main.class.getResource("/assets/icon.png")));
+						frame.addIconImage(ImageIO.read(Main.class.getResource("/icon.png")));
 					}
 				catch (IOException e)
 					{
