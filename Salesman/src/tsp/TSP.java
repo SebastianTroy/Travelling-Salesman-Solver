@@ -45,17 +45,20 @@ public class TSP extends RenderableObject
 			}
 
 		// Menu variables @formatter:off
-		private TMenu menu;
+		private TMenu cityMenu;
+		private TMenu interactionMenu;
+		private TMenu mutationMenu;
 		private final TButton clearButton = new TButton("Remove All Cities"){ @Override public void pressed(){tour.clear(); redraw = true;numGenerations = imrovements = 0;}};
 		private final TButton resetButton = new TButton("Reset Solution"){ @Override public void pressed(){shuffleCities();numGenerations = imrovements = 0;}};
-		private final TButton randomCityButton = new TButton("Add Random City"){ @Override public void pressed(){addCity(new City(Rand.int_(0 + CITY_RADIUS, Main.canvasWidth - CITY_RADIUS),Rand.int_(MENU_HEIGHT + CITY_RADIUS, Main.canvasHeight - CITY_RADIUS)));numGenerations = imrovements = 0;}};
-		private final TButton tenRandomCityButton = new TButton("Add 10 Random Cities"){ @Override public void pressed(){for (int i = 0; i < 10; i++) addCity(new City(Rand.int_(0 + CITY_RADIUS, Main.canvasWidth - CITY_RADIUS),Rand.int_(MENU_HEIGHT + CITY_RADIUS, Main.canvasHeight - CITY_RADIUS)));numGenerations = imrovements = 0;}};
-		private final TButton addGridButton = new TButton("Add 6 * 6 Grid"){ @Override public void pressed(){for (int x = 0; x < 6; x++) for (int y = 0; y < 6; y++) addCity(new City(50 + (x * ((Main.canvasWidth - 100)/5)),50 + MENU_HEIGHT + (y * ((Main.canvasHeight - 100 - MENU_HEIGHT)/5))));numGenerations = imrovements = 0;}};
+		private final TButton randomCityButton = new TButton("Add Random City"){ @Override public void pressed(){addCity(new City(Rand.int_(0 + CITY_RADIUS, Main.canvasWidth - CITY_RADIUS),Rand.int_((int)(1.5 * MENU_HEIGHT) + CITY_RADIUS, Main.canvasHeight - CITY_RADIUS)));numGenerations = imrovements = 0;}};
+		private final TButton tenRandomCityButton = new TButton("Add 10 Random Cities"){ @Override public void pressed(){for (int i = 0; i < 10; i++) addCity(new City(Rand.int_(0 + CITY_RADIUS, Main.canvasWidth - CITY_RADIUS),Rand.int_((int)(1.5 * MENU_HEIGHT) + CITY_RADIUS, Main.canvasHeight - CITY_RADIUS)));numGenerations = imrovements = 0;}};
+		private final TButton addGridButton = new TButton("Add 6 * 6 Grid"){ @Override public void pressed(){for (int x = 0; x < 6; x++) for (int y = 0; y < 6; y++) addCity(new City(50 + (x * ((Main.canvasWidth - 100)/5)),50 + (int)(1.5*MENU_HEIGHT) + (y * ((Main.canvasHeight - 100 - (2*MENU_HEIGHT))/5))));numGenerations = imrovements = 0;}};
 		private final TRadioButtonCollection mouseControlRadioButtons = new TRadioButtonCollection();
 		private final TRadioButton newCityButton = new TRadioButton("New City");
 		private final TRadioButton moveCityButton = new TRadioButton("Move City");
 		private final TRadioButton removeCityButton = new TRadioButton("Remove City");
 		private final TLabel currentMethodLabel = new TLabel("Swap cities");
+		private final TCheckBox loopTourCheckbox = new TCheckBox("Loop TOur");
 		private final TCheckBox playPauseCheckbox = new TCheckBox("Pause");
 		private final TCheckBox autoMutateCheckbox = new TCheckBox("Automatic?");
 		private final TButton nextMutationMethodButton = new TButton("Next Method"){ @Override public final void pressed(){incrementMutationType();}};
@@ -85,31 +88,44 @@ public class TSP extends RenderableObject
 				currentMethodLabel.setFontSize(15);
 				currentMethodLabel.setBackgroundColour(BACKGROUND_COLOUR);
 				currentMethodLabel.setTextColour(ROUTE_COLOUR);
+				moveCityButton.setChecked(true);
 				autoMutateCheckbox.setChecked(true);
 
 				// Set up the menu
-				menu = new TMenu(0, 0, Main.canvasWidth, MENU_HEIGHT, TMenu.HORIZONTAL);
-				menu.setTComponentAlignment(TMenu.ALIGN_START);
-				menu.setBorderSize(2);
-				menu.setBackgroundColour(BACKGROUND_COLOUR);
+				cityMenu = new TMenu(0, 0, Main.canvasWidth, MENU_HEIGHT, TMenu.HORIZONTAL);
+				cityMenu.setTComponentAlignment(TMenu.ALIGN_START);
+				cityMenu.setBorderSize(2);
+				cityMenu.setBackgroundColour(BACKGROUND_COLOUR);
 
-				// add the menu
-				add(menu);
-				menu.add(clearButton);
-				menu.add(resetButton);
-				menu.add(randomCityButton);
-				menu.add(tenRandomCityButton);
-				menu.add(addGridButton);
+				interactionMenu = new TMenu(0, MENU_HEIGHT, 320, MENU_HEIGHT / 2, TMenu.HORIZONTAL);
+				interactionMenu.setTComponentAlignment(TMenu.ALIGN_START);
+				interactionMenu.setBorderSize(0);
+				interactionMenu.setBackgroundColour(BACKGROUND_COLOUR);
 
-				menu.add(newCityButton, false);
-				menu.add(moveCityButton, false);
-				menu.add(removeCityButton, false);
+				mutationMenu = new TMenu(0, Main.canvasHeight - (MENU_HEIGHT / 2), Main.canvasWidth, MENU_HEIGHT / 2, TMenu.HORIZONTAL);
+				mutationMenu.setTComponentAlignment(TMenu.ALIGN_START);
+				mutationMenu.setBorderSize(0);
+				mutationMenu.setBackgroundColour(BACKGROUND_COLOUR);
 
-				menu.add(playPauseCheckbox, false);
+				// add the menus
+				add(cityMenu);
+				cityMenu.add(clearButton);
+				cityMenu.add(resetButton);
+				cityMenu.add(randomCityButton);
+				cityMenu.add(tenRandomCityButton);
+				cityMenu.add(addGridButton);
+				cityMenu.add(loopTourCheckbox, false);
 
-				menu.add(autoMutateCheckbox, false);
-				menu.add(nextMutationMethodButton, false);
-				menu.add(currentMethodLabel, false);
+				add(interactionMenu);
+				interactionMenu.add(newCityButton, false);
+				interactionMenu.add(moveCityButton, false);
+				interactionMenu.add(removeCityButton, false);
+
+				add(mutationMenu);
+				mutationMenu.add(playPauseCheckbox, false);
+				mutationMenu.add(autoMutateCheckbox, false);
+				mutationMenu.add(nextMutationMethodButton, false);
+				mutationMenu.add(currentMethodLabel, false);
 			}
 
 		@Override
@@ -131,25 +147,25 @@ public class TSP extends RenderableObject
 						double distanceImproved = calculateTourLength(tour) - calculateTourLength(tourCopy);
 
 						// If the mutant tour is better, keep it
-						if (distanceImproved > 0)
+						if (distanceImproved >= 0)
 							{
-								imrovements++;
-								if (distanceImproved >= 0)
-									{
-										// clear the old tour
-										tour.clear();
-										// add the new tour
-										for (City c : tourCopy)
-											tour.add(c);
+								if (distanceImproved > 0)
+									imrovements++;
 
-										// reset the time elapsed since the last improvement
-										if (distanceImproved > 0)
-											timeSincelastImprovement = 0;
+								// clear the old tour
+								tour.clear();
+								// add the new tour
+								for (City c : tourCopy)
+									tour.add(c);
 
-										// draw the new tour
-										redraw = true;
-									}
+								// reset the time elapsed since the last improvement
+								if (distanceImproved > 0)
+									timeSincelastImprovement = 0;
+
+								// draw the new tour
+								redraw = true;
 							}
+
 						else if (autoMutateCheckbox.isChecked())// check to see how long since the last improvement and adapt strategy if necessary.
 							{
 								if (generationsSinceLastMutationType > 2000)
@@ -189,16 +205,21 @@ public class TSP extends RenderableObject
 							if (c.hasNext())
 								// g.drawLine(c.x, c.y, c.getNext().x, c.getNext().y);
 								DrawTools.drawArrow(c.x, c.y, c.getNext().x, c.getNext().y, g, 10);
+							else if (loopTourCheckbox.isChecked())
+								{
+									City c2 = getFirstInTour(tour);
+									DrawTools.drawArrow(c.x, c.y, c2.x, c2.y, g, 10);
+								}
 
 						redraw = false;
 					}
 				g.setColor(BACKGROUND_COLOUR);
-				g.fillRect(0, MENU_HEIGHT, 500, 15);
+				g.fillRect(330, MENU_HEIGHT, 500, 15);
 
 				g.setColor(ROUTE_COLOUR);
-				g.drawString("Improved " + (int) timeSincelastImprovement + "s ago.", 5, MENU_HEIGHT + 15);
-				g.drawString("Generations: " + numGenerations, 155, MENU_HEIGHT + 15);
-				g.drawString("Improvements: " + imrovements, 305, MENU_HEIGHT + 15);
+				g.drawString("Improved " + (int) timeSincelastImprovement + "s ago.", 335, MENU_HEIGHT+ 15);
+				g.drawString("Generations: " + numGenerations, 485, MENU_HEIGHT + 15);
+				g.drawString("Improvements: " + imrovements, 635, MENU_HEIGHT + 15);
 			}
 
 		/**
@@ -209,9 +230,10 @@ public class TSP extends RenderableObject
 		 */
 		private final void addCity(City c)
 			{
-				if (c.x < 0 || c.x > Main.canvasWidth || c.y < MENU_HEIGHT || c.y > Main.canvasHeight)
+				if (c.x < 0 || c.x > Main.canvasWidth || c.y < (1.5 * MENU_HEIGHT) + CITY_RADIUS || c.y > (Main.canvasHeight - CITY_RADIUS) - (MENU_HEIGHT / 2))
 					{
-						WindowTools.informationWindow("City out of bounds!", "addCity in TSP");
+						if (Main.DEBUG)
+							WindowTools.informationWindow("City out of bounds!", "addCity in TSP");
 						return;
 					}
 
@@ -308,7 +330,7 @@ public class TSP extends RenderableObject
 							break;
 					}
 				/* We have resized a menu item and currently the menu will not be notified automatically so this causes the menu to adjust itself */
-				menu.setWidth(menu.getWidthD());
+				mutationMenu.setWidth(mutationMenu.getWidthD());
 			}
 
 		/**
@@ -438,8 +460,29 @@ public class TSP extends RenderableObject
 				for (City c : tour)
 					if (c.hasNext())
 						distance += NumTools.distance(c.x, c.y, c.next.x, c.next.y);
+					else if (loopTourCheckbox.isChecked())
+						{
+							City c2 = getFirstInTour(tour);
+							distance += NumTools.distance(c.x, c.y, c2.x, c2.y);
+						}
 
 				return distance;
+			}
+
+		/**
+		 * When the tour is being wrapped there is still a 'first' and 'last' city, they simply have a line drawn between them and their distance is used in the
+		 * tour distance calculation.
+		 * 
+		 * @return - The first city in the tour
+		 */
+		private final City getFirstInTour(ArrayList<City> tour)
+			{
+				City city = null;
+				for (City c : tour)
+					if (!c.hasPrevious())
+						return c;
+
+				return city;
 			}
 
 		@Override
@@ -448,7 +491,7 @@ public class TSP extends RenderableObject
 				Point p = e.getPoint();
 
 				// Add a new city at the mouse point
-				if (newCityButton.isChecked() && !(p.x < 0 || p.x > Main.canvasWidth || p.y < MENU_HEIGHT || p.y > Main.canvasHeight))
+				if (newCityButton.isChecked())
 					{
 						addCity(new City(p.x, p.y));
 						numGenerations = imrovements = 0;
@@ -493,7 +536,7 @@ public class TSP extends RenderableObject
 								if (tour.get(i).selected == true)
 									{
 										numGenerations = imrovements = 0;
-										if (e.getX() < 0 || e.getX() > Main.canvasWidth || e.getY() < MENU_HEIGHT || e.getY() > Main.canvasHeight)
+										if (e.getX() < 0 || e.getX() > Main.canvasWidth || e.getY() < MENU_HEIGHT * 1.5 || e.getY() > Main.canvasHeight - (MENU_HEIGHT / 2))
 											{
 												tour.get(i).removeFromTour();
 												tour.remove(i);
@@ -529,7 +572,10 @@ public class TSP extends RenderableObject
 		public final void componentResized(ComponentEvent e)
 			{
 				redraw = true;
-				menu.setWidth(Main.canvasWidth);
+				cityMenu.setWidth(Main.canvasWidth);
+				interactionMenu.setWidth(Math.min(Main.canvasWidth, 320));
+				mutationMenu.setWidth(Main.canvasWidth);
+				mutationMenu.setY(Main.canvasHeight - (MENU_HEIGHT / 2));
 				for (int i = 0; i < tour.size(); i++)
 					if (tour.get(i).x < 0 || tour.get(i).x > Main.canvasWidth || tour.get(i).y < MENU_HEIGHT || tour.get(i).y > Main.canvasHeight)
 						{
@@ -576,22 +622,8 @@ public class TSP extends RenderableObject
 					}
 
 				/**
-				 * Used when copying a city into a new tour
-				 * 
-				 * @param x
-				 *            - x location of the city
-				 * @param y
-				 *            - y location of the city
-				 */
-				private City(int x, int y, boolean selected)
-					{
-						this(x, y);
-						this.selected = selected;
-					}
-
-				/**
 				 * Hard copies the specified city.
-				 * 
+				 *
 				 * @param city
 				 *            - city to be copied.
 				 */
@@ -627,7 +659,9 @@ public class TSP extends RenderableObject
 						if (hasPrevious())
 							insertAfter(previous);
 						else if (hasNext())
-							insertBefore(next);
+							{
+								insertBefore(next);
+							}
 						else
 							new Exception("Cannot add new city to existing tour without reference to position in tour");
 					}
