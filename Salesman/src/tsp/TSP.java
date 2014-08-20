@@ -302,16 +302,16 @@ public class TSP extends RenderableObject
 				switch (currentType)
 					{
 						case SWAP_TWO:
-							currentType = MutationType.RANDOMISE_ONE;// MOVE_BOTH_ENDS;
-							currentMethodLabel.setLabelText("Randomise city position");// "Move tour ends");
+							currentType = MutationType.RANDOMISE_ONE;
+							currentMethodLabel.setLabelText("Randomise city position");
 							break;
 
-						// case MOVE_BOTH_ENDS:
-						// currentType = MutationType.RANDOMISE_ONE;
-						// currentMethodLabel.setLabelText("Randomise city position");
+						// case RANDOMISE_ONE:
+						// currentType = MutationType.MOVE_BOTH_ENDS;
+						// currentMethodLabel.setLabelText("Move tour ends");
 						// break;
 
-						case RANDOMISE_ONE:
+						case RANDOMISE_ONE://MOVE_BOTH_ENDS:
 							currentType = MutationType.RANDOMISE_SOME;
 							currentMethodLabel.setLabelText("Randomise city positions");
 							break;
