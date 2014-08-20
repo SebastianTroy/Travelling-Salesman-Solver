@@ -219,7 +219,7 @@ public class TSP extends RenderableObject
 				g.fillRect(330, MENU_HEIGHT, 500, 15);
 
 				g.setColor(ROUTE_COLOUR);
-				g.drawString("Improved " + (int) timeSincelastImprovement + "s ago.", 335, MENU_HEIGHT+ 15);
+				g.drawString("Improved " + (int) timeSincelastImprovement + "s ago.", 335, MENU_HEIGHT + 15);
 				g.drawString("Generations: " + numGenerations, 485, MENU_HEIGHT + 15);
 				g.drawString("Improvements: " + imrovements, 635, MENU_HEIGHT + 15);
 			}
@@ -311,7 +311,7 @@ public class TSP extends RenderableObject
 						// currentMethodLabel.setLabelText("Move tour ends");
 						// break;
 
-						case RANDOMISE_ONE://MOVE_BOTH_ENDS:
+						case RANDOMISE_ONE:// MOVE_BOTH_ENDS:
 							currentType = MutationType.RANDOMISE_SOME;
 							currentMethodLabel.setLabelText("Randomise city positions");
 							break;
@@ -353,41 +353,23 @@ public class TSP extends RenderableObject
 			{
 				switch (currentType)
 					{
-						case SWAP_TWO: // Two cities swap their positions in the tour
-							tour.get(Rand.int_(0, tour.size())).swapWith(tour.get(Rand.int_(0, tour.size())));
-							break;
-
-						// case MOVE_BOTH_ENDS: // The start is joined to the end, new start & end points are chosen
-						// // Find the old ends
-						// City oldStart = tour.get(0),
-						// oldEnd = tour.get(tour.size() - 1),
-						// newStart = null;
-						//
-						// // Join the tour in a loop
-						// oldEnd.next = oldStart;
-						// oldStart.previous = oldEnd;
-						//
-						// // Find a random connection and break it
-						// boolean connectionBroken = false;
-						// do
-						// {
-						// newStart = tour.get(Rand.int_(0, tour.size()));
-						// if (newStart.hasPrevious())
-						// {
-						// newStart.getPrevious().next = null;
-						// newStart.previous = null;
-						// connectionBroken = true;
-						// }
-						// }
-						// while (!connectionBroken);
-						// break;
-
 						case RANDOMISE_ONE: // The position of one city is randomised
 							if (Rand.bool())
 								tour.get(Rand.int_(0, tour.size())).insertBefore(tour.get(Rand.int_(0, tour.size())));
 							else
 								tour.get(Rand.int_(0, tour.size())).insertAfter(tour.get(Rand.int_(0, tour.size())));
 							break;
+
+						/*
+						 * case MOVE_BOTH_ENDS: // The start is joined to the end, new start & end points are chosen // Find the old ends City oldStart =
+						 * tour.get(0), oldEnd = tour.get(tour.size() - 1), newStart = null;
+						 * 
+						 * // Join the tour in a loop oldEnd.next = oldStart; oldStart.previous = oldEnd;
+						 * 
+						 * // Find a random connection and break it boolean connectionBroken = false; do { newStart = tour.get(Rand.int_(0, tour.size())); if
+						 * (newStart.hasPrevious()) { newStart.getPrevious().next = null; newStart.previous = null; connectionBroken = true; } } while
+						 * (!connectionBroken); break;
+						 */
 
 						case RANDOMISE_SOME: // The position of a number of cities is randomised
 							for (int i = Rand.int_(0, tour.size()); i > 0; i--)
@@ -442,6 +424,10 @@ public class TSP extends RenderableObject
 								for (int i = 0; i < sectionSize; i++)
 									temp.getNext().insertAfter(tour.get(tour.size() - 1));
 
+							break;
+
+						case SWAP_TWO: // Two cities swap their positions in the tour
+							tour.get(Rand.int_(0, tour.size())).swapWith(tour.get(Rand.int_(0, tour.size())));
 							break;
 
 						default:
