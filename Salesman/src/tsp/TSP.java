@@ -52,7 +52,8 @@ public class TSP extends RenderableObject
 		private final TButton resetButton = new TButton("Reset Solution"){ @Override public void pressed(){shuffleCities();numGenerations = imrovements = 0;}};
 		private final TButton randomCityButton = new TButton("Add Random City"){ @Override public void pressed(){addCity(new City(Rand.int_(0 + CITY_RADIUS, Main.canvasWidth - CITY_RADIUS),Rand.int_((int)(1.5 * MENU_HEIGHT) + CITY_RADIUS, Main.canvasHeight - CITY_RADIUS)));numGenerations = imrovements = 0;}};
 		private final TButton tenRandomCityButton = new TButton("Add 10 Random Cities"){ @Override public void pressed(){for (int i = 0; i < 10; i++) addCity(new City(Rand.int_(0 + CITY_RADIUS, Main.canvasWidth - CITY_RADIUS),Rand.int_((int)(1.5 * MENU_HEIGHT) + CITY_RADIUS, Main.canvasHeight - CITY_RADIUS)));numGenerations = imrovements = 0;}};
-		private final TButton addGridButton = new TButton("Add 6 * 6 Grid"){ @Override public void pressed(){for (int x = 0; x < 6; x++) for (int y = 0; y < 6; y++) addCity(new City(50 + (x * ((Main.canvasWidth - 100)/5)),50 + (int)(1.5*MENU_HEIGHT) + (y * ((Main.canvasHeight - 100 - (2*MENU_HEIGHT))/5))));numGenerations = imrovements = 0;}};
+		private final TButton addSmallGridButton = new TButton("Add 6 * 6 Grid"){ @Override public void pressed(){for (int x = 0; x < 6; x++) for (int y = 0; y < 6; y++) addCity(new City(50 + (x * ((Main.canvasWidth - 100)/5)),50 + (int)(1.5*MENU_HEIGHT) + (y * ((Main.canvasHeight - 100 - (2*MENU_HEIGHT))/5))));numGenerations = imrovements = 0;}};
+		private final TButton addLargeGridButton = new TButton("Add 10 * 10 Grid"){ @Override public void pressed(){for (int x = 0; x < 10; x++) for (int y = 0; y < 10; y++) addCity(new City(50 + (x * ((Main.canvasWidth - 100)/9)),50 + (int)(1.5*MENU_HEIGHT) + (y * ((Main.canvasHeight - 100 - (2*MENU_HEIGHT))/9))));numGenerations = imrovements = 0;}};
 		private final TRadioButtonCollection mouseControlRadioButtons = new TRadioButtonCollection();
 		private final TRadioButton newCityButton = new TRadioButton("New City");
 		private final TRadioButton moveCityButton = new TRadioButton("Move City");
@@ -99,12 +100,12 @@ public class TSP extends RenderableObject
 
 				interactionMenu = new TMenu(0, MENU_HEIGHT, 320, MENU_HEIGHT / 2, TMenu.HORIZONTAL);
 				interactionMenu.setTComponentAlignment(TMenu.ALIGN_START);
-				interactionMenu.setBorderSize(0);
+				interactionMenu.setBorderSize(2);
 				interactionMenu.setBackgroundColour(BACKGROUND_COLOUR);
 
 				mutationMenu = new TMenu(0, Main.canvasHeight - (MENU_HEIGHT / 2), Main.canvasWidth, MENU_HEIGHT / 2, TMenu.HORIZONTAL);
 				mutationMenu.setTComponentAlignment(TMenu.ALIGN_START);
-				mutationMenu.setBorderSize(0);
+				mutationMenu.setBorderSize(2);
 				mutationMenu.setBackgroundColour(BACKGROUND_COLOUR);
 
 				// add the menus
@@ -113,7 +114,8 @@ public class TSP extends RenderableObject
 				cityMenu.add(resetButton);
 				cityMenu.add(randomCityButton);
 				cityMenu.add(tenRandomCityButton);
-				cityMenu.add(addGridButton);
+				cityMenu.add(addSmallGridButton);
+				cityMenu.add(addLargeGridButton);
 				cityMenu.add(loopTourCheckbox, false);
 
 				add(interactionMenu);

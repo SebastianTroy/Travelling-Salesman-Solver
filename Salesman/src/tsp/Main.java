@@ -24,7 +24,7 @@ public class Main extends TCode
 
 				FORCE_SINGLE_THREAD = true;
 				
-				versionNumber = "2.0";
+				versionNumber = "2.1";
 				programName = "Traveling Salesman solver";
 				
 				frame.simplifyTitle(true);
