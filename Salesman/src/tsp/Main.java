@@ -27,8 +27,6 @@ public class Main extends TCode
 				versionNumber = "2.1";
 				programName = "Traveling Salesman solver";
 				
-				frame.simplifyTitle(true);
-				
 				try
 					{
 						frame.addIconImage(ImageIO.read(Main.class.getResource("icon.png")));
